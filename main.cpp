@@ -293,6 +293,7 @@ void LV2Plugin::prepare_ui()
 			printf("filed to create widget!\n");
 			abort();
 		}
+		/* TODO: set some hints / properties so its a floting window in my tiling WM */
 	} else {
 		/* TODO: filtering should help with this */
 		printf("filed to find ui!\n");
