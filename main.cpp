@@ -77,6 +77,7 @@ class LV2Plugin
 		void process_frame(float*);
 
 	protected:
+		bool ready = false;
 		LilvWorld *world;
 		const LilvPlugins *plugins = nullptr;
 
@@ -395,10 +396,11 @@ size_t LV2Plugin::get_channels(void)
 
 void LV2Plugin::update_plugin_instance(void)
 {
-	if (!instance_needs_update)
+	if (!this->instance_needs_update)
 		return;
 
-	instance_needs_update = false;
+	this->ready = false;
+	this->instance_needs_update = false;
 
 	cleanup_ui();
 
@@ -437,11 +439,14 @@ void LV2Plugin::update_plugin_instance(void)
 	}
 
 	this->prepare_ports();
+
+	this->ready = true;
 }
 
 void LV2Plugin::process_frame(float* buf)
 {
-	if (this->plugin_instance == nullptr)
+	/* XXX: may need proper locking */
+	if (!this->ready)
 		return;
 
 	for (size_t ch = 0; ch < this->channels; ++ch)
