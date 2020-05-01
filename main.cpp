@@ -37,7 +37,7 @@ MODULE_EXPORT const char *obs_module_description(void)
 enum LV2PortType
 {
 	PORT_AUDIO,
-	PORT_COTNROL,
+	PORT_CONTROL,
 };
 
 struct LV2Port
@@ -151,7 +151,7 @@ void LV2Plugin::prepare_ports(void)
 
 		if (lilv_port_is_a(this->plugin, port, control_port)) {
 			/* they are always float */
-			this->ports[i].type = PORT_COTNROL;
+			this->ports[i].type = PORT_CONTROL;
 			lilv_instance_connect_port(this->plugin_instance, i, &this->ports[i].value);
 		} else if (lilv_port_is_a(this->plugin, port, audio_port)) {
 			this->ports[i].type = PORT_AUDIO;
