@@ -202,8 +202,6 @@ void LV2Plugin::suil_write_from_ui(void *controller,
 
 	UNUSED_PARAMETER(lv2);
 
-	printf("port_index %u, buffer_size %u, format %u, buffer: %f\n", port_index, buffer_size, format, *((float*)buffer));
-
 	if (format != 0 || buffer_size != 4) {
 		printf("gui is trying to set something else than a float\n");
 		abort();
@@ -279,10 +277,14 @@ void LV2Plugin::prepare_ui()
 
 	if (this->ui_instance != nullptr) {
 		this->ui_widget = (QWidget*) suil_instance_get_widget(ui_instance);
-		if (this->ui_widget == nullptr)
+		if (this->ui_widget == nullptr) {
 			printf("filed to create widget!\n");
+			abort();
+		}
 	} else {
+		/* TODO: filtering should help with this */
 		printf("filed to find ui!\n");
+		abort();
 	}
 }
 
@@ -407,7 +409,6 @@ void LV2Plugin::update_plugin_instance(void)
 			if (lilv_ui_is_supported(ui, suil_ui_supported,
 						 qt5_uri,
 						 &ui_type)) {
-				printf("got ui!\n");
 				this->ui = ui;
 				this->ui_type = ui_type;
 				break;
@@ -474,8 +475,6 @@ static void obs_filter_update(void *data, obs_data_t *s)
 	lv2->set_channels(channels);
 
 	lv2->update_plugin_instance();
-
-	printf("selected plugin %s, sample rate %d, channels %zu!\n", uri, sample_rate, channels);
 }
 
 static void *obs_filter_create(obs_data_t *settings, obs_source_t *filter)
