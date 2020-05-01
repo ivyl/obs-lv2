@@ -21,6 +21,7 @@
 #include <suil-0/suil/suil.h>
 #include <suil/suil.h>
 #include <lv2/ui/ui.h>
+#include <lv2/atom/atom.h>
 #include <iostream>
 #include <functional>
 #include <stdio.h>
@@ -117,6 +118,7 @@ void LV2Plugin::prepare_ports(void)
 	LilvNode* output_port  = lilv_new_uri(world, LV2_CORE__OutputPort);
 	LilvNode* audio_port   = lilv_new_uri(world, LV2_CORE__AudioPort);
 	LilvNode* control_port = lilv_new_uri(world, LV2_CORE__ControlPort);
+	LilvNode* atom_port    = lilv_new_uri(world, LV2_ATOM__AtomPort);
 	LilvNode* optional     = lilv_new_uri(world, LV2_CORE__connectionOptional);
 
 	this->ports_count = lilv_plugin_get_num_ports(this->plugin);
@@ -157,8 +159,17 @@ void LV2Plugin::prepare_ports(void)
 				this->input_buffer_size++;
 			else
 				this->output_buffer_size++;
+		} else if (lilv_port_is_a(this->plugin, port, atom_port)) {
+			/* TODO: some plugins seem to have atom port what are those? */
+			/* everything seems to be working if we ignore them */
 		} else if (!this->ports[i].is_optional){
-			printf("No idea what to do with a port that is neither an audio nor control and is not optional\n");
+			auto name = lilv_port_get_name(this->plugin, port);
+			printf("No idea what to do with a port \"%s\" that is neither an audio nor control and is not optional\n", lilv_node_as_string(name));
+			auto classes = lilv_port_get_classes(this->plugin, port);
+			LILV_FOREACH(nodes, j, classes) {
+				auto cls = lilv_nodes_get(classes, j);
+				printf("  class: %s\n", lilv_node_as_string(cls));
+			}
 			abort(); /* XXX: check spec and be less harsh */
 		}
 	}
@@ -185,6 +196,7 @@ void LV2Plugin::prepare_ports(void)
 	free(default_values);
 
 	lilv_node_free(optional);
+	lilv_node_free(atom_port);
 	lilv_node_free(control_port);
 	lilv_node_free(audio_port);
 	lilv_node_free(output_port);
