@@ -38,6 +38,7 @@ enum LV2PortType
 {
 	PORT_AUDIO,
 	PORT_CONTROL,
+	PORT_ATOM,
 };
 
 struct LV2Port
@@ -163,6 +164,7 @@ void LV2Plugin::prepare_ports(void)
 		} else if (lilv_port_is_a(this->plugin, port, atom_port)) {
 			/* TODO: some plugins seem to have atom port what are those? */
 			/* everything seems to be working if we ignore them */
+			this->ports[i].type = PORT_ATOM;
 		} else if (!this->ports[i].is_optional){
 			auto name = lilv_port_get_name(this->plugin, port);
 			printf("No idea what to do with a port \"%s\" that is neither an audio nor control and is not optional\n", lilv_node_as_string(name));
