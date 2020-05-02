@@ -217,10 +217,12 @@ void LV2Plugin::suil_write_from_ui(void *controller,
 
 	UNUSED_PARAMETER(lv2);
 
-	if (format != 0 || buffer_size != 4) {
-		printf("gui is trying to set something else than a float\n");
-		abort();
+	if (format != 0 || buffer_size != sizeof(float)) {
+		printf("gui is trying use format %u with buffer_size %u\n", format, buffer_size);
+		return; /* we MUST gracefully ignore according to the spec */
 	}
+
+	/* 0 == float */
 
 	lv2->ports[port_index].value = *((float*)buffer);
 }
