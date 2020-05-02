@@ -113,7 +113,7 @@ void LV2Plugin::prepare_ports(void)
 void LV2Plugin::process_frame(float* buf)
 {
 	/* XXX: may need proper locking */
-	if (!this->ready)
+	if (!this->ready || this->plugin_instance == nullptr)
 		return;
 
 	for (size_t ch = 0; ch < this->channels; ++ch)

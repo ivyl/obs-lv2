@@ -39,18 +39,22 @@ static void obs_filter_destroy(void *data)
 	delete lv2;
 }
 
-static void obs_filter_update(void *data, obs_data_t *s)
+static void obs_filter_update(void *data, obs_data_t *settings)
 {
 	auto obs_audio = obs_get_audio();
 	LV2Plugin *lv2 = (LV2Plugin*) data;
 
-	const char *uri = obs_data_get_string(s, PROP_PLUGIN_LIST);
+	const char *uri = obs_data_get_string(settings, PROP_PLUGIN_LIST);
 
 	uint32_t sample_rate = audio_output_get_sample_rate(obs_audio);
 	size_t channels = audio_output_get_channels(obs_audio);
 
 
-	lv2->set_uri(uri);
+	if (strlen(uri) == 0)
+		lv2->set_uri(nullptr);
+	else
+		lv2->set_uri(uri);
+
 	lv2->set_sample_rate(sample_rate);
 	lv2->set_channels(channels);
 
@@ -60,6 +64,9 @@ static void obs_filter_update(void *data, obs_data_t *s)
 static void *obs_filter_create(obs_data_t *settings, obs_source_t *filter)
 {
 	LV2Plugin *lv2 = new LV2Plugin();
+
+	obs_filter_update(lv2, settings);
+
 	return lv2;
 }
 
@@ -86,7 +93,6 @@ obs_filter_audio(void *data, struct obs_audio_data *audio)
 			if (audio->data[ch])
 				audio_data[ch][frame] = buf[ch];
 		}
-
 	}
 
 	return audio;
@@ -122,7 +128,7 @@ static obs_properties_t *obs_filter_properties(void *data)
 				  "Toggle LV2 Plugin's GUI",
 				  obs_toggle_gui);
 
-	obs_property_list_add_string(list, "{select a plug-in}", nullptr);
+	obs_property_list_add_string(list, "{select a plug-in}", "");
 
 	lv2->list_all([&](const char *name, const char *uri) {
 		obs_property_list_add_string(list, name, uri);

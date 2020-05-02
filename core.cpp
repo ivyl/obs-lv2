@@ -131,12 +131,15 @@ void LV2Plugin::update_plugin_instance(void)
 	this->plugin_instance = nullptr;
 	this->ui = nullptr;
 
-	auto plugin_uri = lilv_new_uri(this->world, this->plugin_uri);
+	LilvNode *uri = nullptr;
 
-	if (plugin_uri != nullptr) {
-		this->plugin = lilv_plugins_get_by_uri(plugins, plugin_uri);
-		lilv_node_free(plugin_uri);
+	if (this->plugin_uri != nullptr) {
+		uri = lilv_new_uri(this->world, this->plugin_uri);
+		this->plugin = lilv_plugins_get_by_uri(plugins, uri);
+		lilv_node_free(uri);
+	}
 
+	if (this->plugin != nullptr) {
 		auto qt5_uri = lilv_new_uri(this->world, LV2_UI__Qt5UI);
 
 		auto uis = lilv_plugin_get_uis(this->plugin);
@@ -153,15 +156,14 @@ void LV2Plugin::update_plugin_instance(void)
 			}
 		}
 		lilv_node_free(qt5_uri);
-	}
 
-	if (this->plugin != nullptr) {
 		this->plugin_instance = lilv_plugin_instantiate(this->plugin,
 								this->sample_rate,
 								this->features);
+
+		this->prepare_ports();
 	}
 
-	this->prepare_ports();
 
 	this->ready = true;
 }
