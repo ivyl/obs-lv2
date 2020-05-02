@@ -125,7 +125,6 @@ void LV2Plugin::set_uri(const char* uri)
 
 		instance_needs_update = true;
 	}
-
 }
 
 void LV2Plugin::update_plugin_instance(void)
@@ -174,7 +173,6 @@ void LV2Plugin::update_plugin_instance(void)
 
 		this->prepare_ports();
 	}
-
 
 	this->ready = true;
 }

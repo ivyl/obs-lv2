@@ -132,7 +132,6 @@ bool LV2Plugin::is_ui_visible()
 
 void LV2Plugin::cleanup_ui()
 {
-
 	if (this->is_ui_visible())
 		this->hide_ui();
 
