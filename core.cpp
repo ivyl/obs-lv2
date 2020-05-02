@@ -69,9 +69,23 @@ bool LV2Plugin::is_feature_supported(const LilvNode* node)
 
 void LV2Plugin::populate_supported_plugins(void)
 {
+	auto hard_rtc = lilv_new_uri(this->world, LV2_CORE__hardRTCapable);
+
 	LILV_FOREACH(plugins, i, this->plugins) {
 		auto plugin = lilv_plugins_get(this->plugins, i);
-		bool skip = false;
+		bool skip;
+
+		/* require hard RTC */
+		/* XXX: seems to be only in the optional features */
+		auto opt_features = lilv_plugin_get_optional_features(plugin);
+		skip = !lilv_nodes_contains(opt_features, hard_rtc);
+		lilv_nodes_free(opt_features);
+
+		if (skip) {
+			printf("%s filtered out due to not supporting hard RTC\n",
+			       lilv_node_as_string(lilv_plugin_get_name(plugin)));
+			continue;
+		}
 
 		auto req_features = lilv_plugin_get_required_features(plugin);
 		LILV_FOREACH(nodes, j, req_features) {
@@ -79,7 +93,7 @@ void LV2Plugin::populate_supported_plugins(void)
 
 			if (!this->is_feature_supported(feature)) {
 				skip = true;
-				printf("%s filtered out due to not supporting %s\n",
+				printf("%s filtered out because we do not support %s\n",
 				       lilv_node_as_string(lilv_plugin_get_name(plugin)),
 				       lilv_node_as_string(feature));
 				break;
@@ -96,6 +110,8 @@ void LV2Plugin::populate_supported_plugins(void)
 			lilv_node_as_string(lilv_plugin_get_name(plugin)),
 			lilv_node_as_string(lilv_plugin_get_uri(plugin))));
 	}
+
+	lilv_node_free(hard_rtc);
 }
 
 void LV2Plugin::for_each_supported_plugin(function<void(const char *, const char *)> f)
