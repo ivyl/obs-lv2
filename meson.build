@@ -8,8 +8,17 @@ deps =  [
   dependency('Qt5Widgets'),
 ]
 
+sources = [
+  'obs-lv2.cpp',
+  'ui.cpp',
+  'urid.cpp',
+  'ports.cpp',
+  'core.cpp',
+]
+
+
 shared_library(meson.project_name(),
-	       'main.cpp',
+	       sources,
 	       dependencies : deps,
 	       name_prefix : '',
 	       install_dir : 'obs-plugins')
