@@ -22,11 +22,13 @@
 #include <suil/suil.h>
 #include <lv2/ui/ui.h>
 #include <lv2/atom/atom.h>
+#include <lv2/urid/urid.h>
 #include <iostream>
 #include <functional>
 #include <stdio.h>
 #include <string.h>
 #include <QWidget>
+#include <string>
 
 OBS_DECLARE_MODULE()
 MODULE_EXPORT const char *obs_module_description(void)
@@ -92,6 +94,7 @@ class LV2Plugin
 		size_t channels = 0;
 		bool instance_needs_update = true;
 
+		/* PORT MAPPING */
 		struct LV2Port *ports = nullptr;
 		size_t ports_count = 0;
 		float *input_buffer = nullptr;
@@ -99,11 +102,14 @@ class LV2Plugin
 		size_t input_buffer_size = 0;
 		size_t output_buffer_size = 0;
 
+		/* UI */
 		const LilvUI *ui = nullptr;
 		const LilvNode *ui_type = nullptr;
 		SuilHost *ui_host = nullptr;
 		SuilInstance* ui_instance = nullptr;
 		QWidget *ui_widget = nullptr;
+
+		bool is_feature_supported(const LilvNode*);
 
 		static void suil_write_from_ui(void *controller,
 					       uint32_t port_index,
@@ -113,6 +119,17 @@ class LV2Plugin
 
 		static uint32_t suil_port_index(void *controller,
 						const char *symbol);
+
+		/* URID MAP FEATURE */
+		std::map<std::string,LV2_URID> urid_map_data;
+		LV2_URID current_urid = 1; /* 0 is reserverd */
+
+		LV2_URID_Map feature_uri_map_data;
+		LV2_Feature feature_uri_map;
+
+		static LV2_URID urid_map(void *handle, const char *uri);
+
+		const LV2_Feature* features[2];
 };
 
 /* TODO: cleanup_ports, we are now leaking this when switching plugins */
@@ -252,10 +269,35 @@ uint32_t LV2Plugin::suil_port_index(void *controller, const char *symbol)
 	return idx;
 }
 
+/* URID HANDLING */
+LV2_URID LV2Plugin::urid_map(LV2_URID_Map_Handle handle, const char *uri)
+{
+	LV2Plugin *lv2 = (LV2Plugin*)handle;
+	LV2_URID urid;
+
+	std::string key = uri;
+
+	if (lv2->urid_map_data.find(key) == lv2->urid_map_data.end()) {
+		urid = lv2->current_urid++;
+		lv2->urid_map_data[key] = urid;
+		printf("Added %u: %s\n", urid, uri);
+	} else {
+		urid = lv2->urid_map_data[key];
+	}
+
+	return urid;
+}
+
 
 /* THE MEAT */
 LV2Plugin::LV2Plugin(void)
 {
+	feature_uri_map_data = { this, LV2Plugin::urid_map };
+	feature_uri_map = { LV2_URID_MAP_URI, &feature_uri_map_data };
+
+	features[0] = &feature_uri_map;
+	features[1] = nullptr; /* NULL terminated */
+
 	world = lilv_world_new();
 	lilv_world_load_all(world);
 	plugins = lilv_world_get_all_plugins(world);
@@ -283,7 +325,6 @@ void LV2Plugin::prepare_ui()
 	char* bundle_path = lilv_file_uri_parse(lilv_node_as_uri(lilv_ui_get_bundle_uri(this->ui)), NULL);
 	char* binary_path = lilv_file_uri_parse(lilv_node_as_uri(lilv_ui_get_binary_uri(this->ui)), NULL);
 
-	/* TODO: last null = features, some pluings seem to need URID */
 	this->ui_instance = suil_instance_new(this->ui_host,
 					      this,
 					      LV2_UI__Qt5UI,
@@ -292,7 +333,7 @@ void LV2Plugin::prepare_ui()
 					      lilv_node_as_uri(this->ui_type),
 					      bundle_path,
 					      binary_path,
-					      NULL);
+					      this->features);
 
 	if (this->ui_instance != nullptr) {
 		this->ui_widget = (QWidget*) suil_instance_get_widget(ui_instance);
@@ -356,30 +397,49 @@ void LV2Plugin::cleanup_ui()
 
 }
 
+bool LV2Plugin::is_feature_supported(const LilvNode* node)
+{
+	bool is_supported = false;
+
+	if (!lilv_node_is_uri(node)) {
+		printf("tested feature passed is not an URI!\n");
+		abort();
+	}
+
+	auto node_uri = lilv_node_as_uri(node);
+
+	for (auto feature = this->features; *feature != nullptr; feature++) {
+		if (0 == strcmp((*feature)->URI, node_uri))
+			is_supported = true;
+	}
+
+	return is_supported;
+}
+
 void LV2Plugin::list_all(std::function<void(const char *, const char *)> f)
 {
 	LILV_FOREACH(plugins, i, this->plugins) {
+		auto plugin = lilv_plugins_get(this->plugins, i);
 		bool skip = false;
 
-		auto plugin = lilv_plugins_get(this->plugins, i);
-
 		auto req_features = lilv_plugin_get_required_features(plugin);
+		LILV_FOREACH(nodes, j, req_features) {
+			const LilvNode* feature = lilv_nodes_get(req_features, j);
 
-		/* XXX: no extra features supported as of now */
-		/* TODO: Add support for URID, most of the LSP plugins require it*/
-		if (lilv_nodes_size(req_features) > 0) {
-			skip = true;
-			printf("Filtered out due to unsupported feature %s\n",
-			       lilv_node_as_string(lilv_plugin_get_name(plugin)));
+			if (!this->is_feature_supported(feature)) {
+				skip = true;
+				printf("%s filtered out due to not supporting %s\n",
+				       lilv_node_as_string(lilv_plugin_get_name(plugin)),
+				       lilv_node_as_string(feature));
+				break;
+			}
 		}
-
 		lilv_nodes_free(req_features);
+
+		/* TODO: filter out non filtering (e.g. MIDI) plugins or the ones without GUI */
 
 		if (skip)
 			continue;
-
-
-		/* TODO: filter out non filtering (e.g. MIDI) plugins or the ones without GUI */
 
 		f(lilv_node_as_string(lilv_plugin_get_name(plugin)),
 		  lilv_node_as_string(lilv_plugin_get_uri(plugin)));
@@ -472,7 +532,7 @@ void LV2Plugin::update_plugin_instance(void)
 	if (this->plugin != nullptr) {
 		this->plugin_instance = lilv_plugin_instantiate(this->plugin,
 								this->sample_rate,
-								NULL);
+								this->features);
 	}
 
 	this->prepare_ports();
