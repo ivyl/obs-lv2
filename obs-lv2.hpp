@@ -29,6 +29,7 @@
 #include <QWidget>
 #include <string>
 #include <math.h>
+#include <vector>
 
 #define PROTOCOL_FLOAT 0
 
@@ -56,7 +57,7 @@ class LV2Plugin
 		LV2Plugin(void);
 		~LV2Plugin();
 
-		void list_all(std::function<void(const char *, const char *)> f);
+		void for_each_supported_plugin(std::function<void(const char *, const char *)> f);
 
 		void set_uri(const char* uri);
 		void set_sample_rate(uint32_t sample_rate);
@@ -78,7 +79,9 @@ class LV2Plugin
 	protected:
 		bool ready = false;
 		LilvWorld *world;
+		std::vector<std::pair<std::string,std::string>> supported_pluggins;
 		const LilvPlugins *plugins = nullptr;
+		void populate_supported_plugins(void);
 
 		const LilvPlugin *plugin = nullptr;
 		LilvInstance *plugin_instance = nullptr;

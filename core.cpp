@@ -17,6 +17,8 @@
 
 #include "obs-lv2.hpp"
 
+using namespace std;
+
 LV2Plugin::LV2Plugin(void)
 {
 	feature_uri_map_data = { this, LV2Plugin::urid_map };
@@ -32,6 +34,8 @@ LV2Plugin::LV2Plugin(void)
 	ui_host = suil_host_new(LV2Plugin::suil_write_from_ui,
 				LV2Plugin::suil_port_index,
 				NULL, NULL);
+
+	populate_supported_plugins();
 
 	/* XXX: what is ui_hosts's touch callback for exactely? do we even need it? */
 }
@@ -63,7 +67,7 @@ bool LV2Plugin::is_feature_supported(const LilvNode* node)
 	return is_supported;
 }
 
-void LV2Plugin::list_all(std::function<void(const char *, const char *)> f)
+void LV2Plugin::populate_supported_plugins(void)
 {
 	LILV_FOREACH(plugins, i, this->plugins) {
 		auto plugin = lilv_plugins_get(this->plugins, i);
@@ -88,9 +92,16 @@ void LV2Plugin::list_all(std::function<void(const char *, const char *)> f)
 		if (skip)
 			continue;
 
-		f(lilv_node_as_string(lilv_plugin_get_name(plugin)),
-		  lilv_node_as_string(lilv_plugin_get_uri(plugin)));
+		this->supported_pluggins.push_back(pair<string,string>(
+			lilv_node_as_string(lilv_plugin_get_name(plugin)),
+			lilv_node_as_string(lilv_plugin_get_uri(plugin))));
 	}
+}
+
+void LV2Plugin::for_each_supported_plugin(function<void(const char *, const char *)> f)
+{
+	for (auto const& p: this->supported_pluggins)
+		f(p.first.c_str(), p.second.c_str());
 }
 
 void LV2Plugin::set_uri(const char* uri)
