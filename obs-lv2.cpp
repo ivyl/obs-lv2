@@ -65,6 +65,13 @@ static void *obs_filter_create(obs_data_t *settings, obs_source_t *filter)
 {
 	LV2Plugin *lv2 = new LV2Plugin();
 
+	/* XXX: so the lilv_world caches plugin data to make get_properties fast */
+	/* TODO: make LV2Plugin class smarter */
+	lv2->list_all([&](const char *name, const char *uri) {
+			(void) name;
+			(void) uri;
+	});
+
 	obs_filter_update(lv2, settings);
 
 	return lv2;
