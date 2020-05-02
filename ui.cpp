@@ -84,7 +84,12 @@ void LV2Plugin::prepare_ui()
 			printf("filed to create widget!\n");
 			abort();
 		}
-		/* TODO: set some hints / properties so its a floting window in my tiling WM */
+
+		/* BUG: Some controls (e.g. drag and drop points for LSP
+		 * Graphic eq) are missplaced until some interaction with the
+		 * UI, may be an issue caused by dialog or suil wrapping, needs
+		 * debugging - appears with XWayland, need to verify on native X*/
+		this->ui_widget->setWindowFlags(Qt::Dialog);
 	} else {
 		/* TODO: filtering should help with this */
 		printf("filed to find ui!\n");
