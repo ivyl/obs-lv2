@@ -342,9 +342,27 @@ void LV2Plugin::cleanup_ui()
 void LV2Plugin::list_all(std::function<void(const char *, const char *)> f)
 {
 	LILV_FOREACH(plugins, i, this->plugins) {
+		bool skip = false;
+
 		auto plugin = lilv_plugins_get(this->plugins, i);
 
-		/* TODO: filter out unsupported pluggins or the ones without GUI */
+		auto req_features = lilv_plugin_get_required_features(plugin);
+
+		/* XXX: no extra features supported as of now */
+		/* TODO: Add support for URID, most of the LSP plugins require it*/
+		if (lilv_nodes_size(req_features) > 0) {
+			skip = true;
+			printf("Filtered out due to unsupported feature %s\n",
+			       lilv_node_as_string(lilv_plugin_get_name(plugin)));
+		}
+
+		lilv_nodes_free(req_features);
+
+		if (skip)
+			continue;
+
+
+		/* TODO: filter out non filtering (e.g. MIDI) plugins or the ones without GUI */
 
 		f(lilv_node_as_string(lilv_plugin_get_name(plugin)),
 		  lilv_node_as_string(lilv_plugin_get_uri(plugin)));
