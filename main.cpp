@@ -34,6 +34,8 @@ MODULE_EXPORT const char *obs_module_description(void)
 	return "OBS LV2 filters";
 }
 
+#define PROTOCOL_FLOAT 0
+
 enum LV2PortType
 {
 	PORT_AUDIO,
@@ -210,15 +212,15 @@ void LV2Plugin::prepare_ports(void)
 void LV2Plugin::suil_write_from_ui(void *controller,
 				   uint32_t port_index,
 				   uint32_t buffer_size,
-				   uint32_t format,
+				   uint32_t port_protocol,
 				   const void *buffer)
 {
 	LV2Plugin *lv2 = (LV2Plugin*)controller;
 
 	UNUSED_PARAMETER(lv2);
 
-	if (format != 0 || buffer_size != sizeof(float)) {
-		printf("gui is trying use format %u with buffer_size %u\n", format, buffer_size);
+	if (port_protocol != PROTOCOL_FLOAT || buffer_size != sizeof(float)) {
+		printf("gui is trying use protocol %u with buffer_size %u\n", port_protocol, buffer_size);
 		return; /* we MUST gracefully ignore according to the spec */
 	}
 
@@ -303,6 +305,19 @@ void LV2Plugin::prepare_ui()
 		/* TODO: filtering should help with this */
 		printf("filed to find ui!\n");
 		abort();
+	}
+
+	for (size_t i = 0; i < this->ports_count; ++i) {
+		auto port = this->ports + i;
+
+		if (port->type != PORT_CONTROL)
+			continue;
+
+		suil_instance_port_event(this->ui_instance,
+					 port->index,
+					 sizeof(float),
+					 PROTOCOL_FLOAT,
+					 &port->value);
 	}
 }
 
