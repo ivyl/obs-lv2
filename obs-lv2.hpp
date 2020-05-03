@@ -27,9 +27,27 @@
 #include <stdio.h>
 #include <string.h>
 #include <QWidget>
+#include <QVBoxLayout>
+#include <QCloseEvent>
 #include <string>
 #include <math.h>
 #include <vector>
+
+class WidgetWindow : public QWidget
+{
+	/* TODO: Q_OBJECT + QT's moc tool ? */
+public:
+	explicit WidgetWindow(QWidget *parent = nullptr);
+	void clearWidget(void);
+	void setWidget(QWidget *widget);
+	virtual ~WidgetWindow();
+
+protected:
+	QVBoxLayout layout;
+	QWidget *currentWidget = nullptr;
+
+	void closeEvent(QCloseEvent *event) override;
+};
 
 #define PROTOCOL_FLOAT 0
 
@@ -104,7 +122,7 @@ protected:
 	const LilvNode *ui_type = nullptr;
 	SuilHost *ui_host = nullptr;
 	SuilInstance* ui_instance = nullptr;
-	QWidget *ui_widget = nullptr;
+	WidgetWindow *ui_window = nullptr;
 
 	bool is_feature_supported(const LilvNode*);
 

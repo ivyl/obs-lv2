@@ -17,6 +17,46 @@
 
 #include "obs-lv2.hpp"
 
+/* QT Window Implementation */
+WidgetWindow::WidgetWindow(QWidget *parent) : QWidget(parent)
+{
+	layout.setMargin(0);
+	layout.setSpacing(0);
+	setLayout(&layout);
+
+	/* BUG: Some controls (e.g. drag and drop points for LSP
+	 * Graphic eq) are missplaced until some interaction with the
+	 * UI, may be an issue caused by dialog or suil wrapping, needs
+	 * debugging - appears with XWayland, need to verify on native X*/
+	setWindowFlags(Qt::Dialog);
+}
+
+void WidgetWindow::clearWidget(void)
+{
+	if (this->currentWidget != nullptr)
+		this->layout.removeWidget(this->currentWidget);
+
+	this->currentWidget = nullptr;
+
+}
+
+void WidgetWindow::setWidget(QWidget *widget)
+{
+	this->clearWidget();
+
+	this->currentWidget = widget;
+	layout.addWidget(widget);
+	this->resize(widget->size());
+}
+
+WidgetWindow::~WidgetWindow() {}
+
+void WidgetWindow::closeEvent(QCloseEvent *event)
+{
+	event->ignore();
+	this->hide();
+}
+
 /* SUIL CALLBACKS */
 void LV2Plugin::suil_write_from_ui(void *controller,
 				   uint32_t port_index,
@@ -76,23 +116,22 @@ void LV2Plugin::prepare_ui()
 					      binary_path,
 					      this->features);
 
-	if (this->ui_instance != nullptr) {
-		this->ui_widget = (QWidget*) suil_instance_get_widget(ui_instance);
-		if (this->ui_widget == nullptr) {
-			printf("filed to create widget!\n");
-			abort();
-		}
-
-		/* BUG: Some controls (e.g. drag and drop points for LSP
-		 * Graphic eq) are missplaced until some interaction with the
-		 * UI, may be an issue caused by dialog or suil wrapping, needs
-		 * debugging - appears with XWayland, need to verify on native X*/
-		this->ui_widget->setWindowFlags(Qt::Dialog);
-	} else {
+	if (this->ui_instance == nullptr) {
 		/* TODO: filtering should help with this */
 		printf("filed to find ui!\n");
 		abort();
 	}
+
+	if (this->ui_window == nullptr)
+		this->ui_window = new WidgetWindow();
+
+	auto widget = (QWidget*) suil_instance_get_widget(ui_instance);
+	if (widget == nullptr) {
+		printf("filed to create widget!\n");
+		abort();
+	}
+
+	ui_window->setWidget(widget);
 
 	for (size_t i = 0; i < this->ports_count; ++i) {
 		auto port = this->ports + i;
@@ -110,22 +149,22 @@ void LV2Plugin::prepare_ui()
 
 void LV2Plugin::show_ui()
 {
-	if (this->ui_widget != nullptr)
-		this->ui_widget->show();
+	if (this->ui_window != nullptr)
+		this->ui_window->show();
 }
 
 void LV2Plugin::hide_ui()
 {
-	if (this->ui_widget != nullptr)
-		this->ui_widget->hide();
+	if (this->ui_window != nullptr)
+		this->ui_window->hide();
 }
 
 bool LV2Plugin::is_ui_visible()
 {
-	if (this->ui_widget == nullptr)
+	if (this->ui_window == nullptr)
 		return false;
 
-	return this->ui_widget->isVisible();
+	return this->ui_window->isVisible();
 }
 
 void LV2Plugin::cleanup_ui()
@@ -133,7 +172,8 @@ void LV2Plugin::cleanup_ui()
 	if (this->is_ui_visible())
 		this->hide_ui();
 
-	this->ui_widget = nullptr;
+	if (this->ui_window != nullptr)
+		this->ui_window->clearWidget();
 
 	if (this->ui_instance != nullptr) {
 		suil_instance_free(this->ui_instance);
