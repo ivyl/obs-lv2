@@ -160,6 +160,7 @@ void LV2Plugin::update_plugin_instance(void)
 
 	lilv_instance_free(this->plugin_instance);
 	this->plugin_instance = nullptr;
+	this->plugin = nullptr;
 	this->ui = nullptr;
 
 	LilvNode *uri = nullptr;

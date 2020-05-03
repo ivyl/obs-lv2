@@ -97,7 +97,7 @@ uint32_t LV2Plugin::suil_port_index(void *controller, const char *symbol)
 /* UI HANDLING */
 void LV2Plugin::prepare_ui()
 {
-	if (this->plugin_instance == nullptr)
+	if (this->plugin_instance == nullptr || this->plugin_uri == nullptr)
 		return;
 
 	if (this->ui_instance != nullptr)
@@ -149,13 +149,13 @@ void LV2Plugin::prepare_ui()
 
 void LV2Plugin::show_ui()
 {
-	if (this->ui_window != nullptr)
+	if (this->ui_window != nullptr && this->ui_instance != nullptr)
 		this->ui_window->show();
 }
 
 void LV2Plugin::hide_ui()
 {
-	if (this->ui_window != nullptr)
+	if (this->ui_window != nullptr && this->ui_instance != nullptr)
 		this->ui_window->hide();
 }
 
