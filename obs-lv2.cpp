@@ -33,33 +33,7 @@ static const char *obs_filter_name(void *unused)
 	return "LV2";
 }
 
-static void obs_filter_destroy(void *data)
-{
-	LV2Plugin *lv2 = (LV2Plugin*) data;
-	delete lv2;
-}
-
-static void obs_filter_update(void *data, obs_data_t *settings)
-{
-	auto obs_audio = obs_get_audio();
-	LV2Plugin *lv2 = (LV2Plugin*) data;
-
-	const char *uri = obs_data_get_string(settings, PROP_PLUGIN_LIST);
-
-	uint32_t sample_rate = audio_output_get_sample_rate(obs_audio);
-	size_t channels = audio_output_get_channels(obs_audio);
-
-
-	if (strlen(uri) == 0)
-		lv2->set_uri(nullptr);
-	else
-		lv2->set_uri(uri);
-
-	lv2->set_sample_rate(sample_rate);
-	lv2->set_channels(channels);
-
-	lv2->update_plugin_instance();
-}
+static void obs_filter_update(void *data, obs_data_t *settings);
 
 static void *obs_filter_create(obs_data_t *settings, obs_source_t *filter)
 {
@@ -70,32 +44,10 @@ static void *obs_filter_create(obs_data_t *settings, obs_source_t *filter)
 	return lv2;
 }
 
-static struct obs_audio_data *
-obs_filter_audio(void *data, struct obs_audio_data *audio)
+static void obs_filter_destroy(void *data)
 {
 	LV2Plugin *lv2 = (LV2Plugin*) data;
-	float **audio_data = (float **)audio->data;
-
-	size_t channels = lv2->get_channels();
-	float buf[channels];
-
-	for (size_t frame = 0; frame < audio->frames; ++frame) {
-		for (size_t ch = 0; ch < channels; ++ch) {
-			if (audio->data[ch])
-				buf[ch] = audio_data[ch][frame];
-			else
-				buf[ch] = 0.0f;
-		}
-
-		lv2->process_frame(buf);
-
-		for (size_t ch = 0; ch < channels; ++ch) {
-			if (audio->data[ch])
-				audio_data[ch][frame] = buf[ch];
-		}
-	}
-
-	return audio;
+	delete lv2;
 }
 
 static bool obs_toggle_gui(obs_properties_t *props, obs_property_t *property, void *data)
@@ -135,6 +87,60 @@ static obs_properties_t *obs_filter_properties(void *data)
 	});
 
 	return props;
+}
+
+static void obs_filter_update(void *data, obs_data_t *settings)
+{
+	auto obs_audio = obs_get_audio();
+	LV2Plugin *lv2 = (LV2Plugin*) data;
+
+	const char *uri = obs_data_get_string(settings, PROP_PLUGIN_LIST);
+
+	uint32_t sample_rate = audio_output_get_sample_rate(obs_audio);
+	size_t channels = audio_output_get_channels(obs_audio);
+
+
+	if (strlen(uri) == 0)
+		lv2->set_uri(nullptr);
+	else
+		lv2->set_uri(uri);
+
+	lv2->set_sample_rate(sample_rate);
+	lv2->set_channels(channels);
+
+	lv2->update_plugin_instance();
+}
+
+static struct obs_audio_data *
+obs_filter_audio(void *data, struct obs_audio_data *audio)
+{
+	LV2Plugin *lv2 = (LV2Plugin*) data;
+	float **audio_data = (float **)audio->data;
+
+	size_t channels = lv2->get_channels();
+	float buf[channels];
+
+	/* TODO: process frames in bulk, currently we are invoking plugin run
+	 * for each frame which is not optimal but seem to work. OBS on my
+	 * system feeds us ~400 frames each round, and the plugins are capable
+	 * of processing more than 1 frame at a time.*/
+	for (size_t frame = 0; frame < audio->frames; ++frame) {
+		for (size_t ch = 0; ch < channels; ++ch) {
+			if (audio->data[ch])
+				buf[ch] = audio_data[ch][frame];
+			else
+				buf[ch] = 0.0f;
+		}
+
+		lv2->process_frame(buf);
+
+		for (size_t ch = 0; ch < channels; ++ch) {
+			if (audio->data[ch])
+				audio_data[ch][frame] = buf[ch];
+		}
+	}
+
+	return audio;
 }
 
 struct obs_source_info obs_lv2_filter = {
