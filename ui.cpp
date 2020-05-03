@@ -31,8 +31,6 @@ void LV2Plugin::suil_write_from_ui(void *controller,
 		return; /* we MUST gracefully ignore according to the spec */
 	}
 
-	/* 0 == float */
-
 	lv2->ports[port_index].value = *((float*)buffer);
 }
 
@@ -141,5 +139,4 @@ void LV2Plugin::cleanup_ui()
 		suil_instance_free(this->ui_instance);
 		this->ui_instance = nullptr;
 	}
-
 }

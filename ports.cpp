@@ -123,6 +123,4 @@ void LV2Plugin::process_frame(float* buf)
 
 	for (size_t ch = 0; ch < this->channels; ++ch)
 		buf[ch] = output_buffer[ch];
-
-
 }
