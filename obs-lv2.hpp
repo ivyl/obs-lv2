@@ -142,7 +142,11 @@ protected:
 	LV2_URID_Map feature_uri_map_data;
 	LV2_Feature feature_uri_map;
 
-	static LV2_URID urid_map(void *handle, const char *uri);
+	LV2_URID_Unmap feature_uri_unmap_data;
+	LV2_Feature feature_uri_unmap;
 
-	const LV2_Feature* features[2];
+	static LV2_URID urid_map(void *handle, const char *uri);
+	static const char *urid_unmap(void *handle, LV2_URID urid);
+
+	const LV2_Feature* features[3];
 };

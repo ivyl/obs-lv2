@@ -24,7 +24,12 @@ LV2Plugin::LV2Plugin(void)
 	feature_uri_map_data = { this, LV2Plugin::urid_map };
 	feature_uri_map = { LV2_URID_MAP_URI, &feature_uri_map_data };
 
+	feature_uri_unmap_data = { this, LV2Plugin::urid_unmap };
+	feature_uri_unmap = { LV2_URID_MAP_URI, &feature_uri_unmap_data };
+
 	features[0] = &feature_uri_map;
+	/* XXX: don't expose it, crashes some plugins */
+	/* features[1] = &feature_uri_unmap; */
 	features[1] = nullptr; /* NULL terminated */
 
 	world = lilv_world_new();
