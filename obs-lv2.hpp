@@ -22,6 +22,7 @@
 #include <lv2/ui/ui.h>
 #include <lv2/atom/atom.h>
 #include <lv2/urid/urid.h>
+#include <lv2/state/state.h>
 #include <iostream>
 #include <functional>
 #include <stdio.h>
@@ -94,6 +95,9 @@ public:
 
 	void process_frame(float*);
 
+	const char *get_state(void);
+	void set_state(const char *str);
+
 protected:
 	bool ready = false;
 	LilvWorld *world;
@@ -149,4 +153,16 @@ protected:
 	static const char *urid_unmap(void *handle, LV2_URID urid);
 
 	const LV2_Feature* features[3];
+
+	/* STATE PERSISTENCE */
+	static const void *get_port_value(const char *port_symbol,
+					  void *user_data,
+					  uint32_t *size,
+					  uint32_t *type);
+
+	static void set_port_value(const char *port_symbol,
+				   void *user_data,
+				   const void *value,
+				   uint32_t size,
+				   uint32_t type);
 };

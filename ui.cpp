@@ -74,14 +74,14 @@ void LV2Plugin::suil_write_from_ui(void *controller,
 	lv2->ports[port_index].value = *((float*)buffer);
 }
 
-
+/* TODO: make a normal method out of this and keep this as a wraper for
+ * state.cpp's sake */
 uint32_t LV2Plugin::suil_port_index(void *controller, const char *symbol)
 {
 	LV2Plugin *lv2 = (LV2Plugin*)controller;
 
 	LilvNode* lilv_sym   = lilv_new_string(lv2->world, symbol);
 	const LilvPort* port = lilv_plugin_get_port_by_symbol(lv2->plugin, lilv_sym);
-
 	lilv_node_free(lilv_sym);
 
 	if (port == nullptr) {
@@ -91,15 +91,15 @@ uint32_t LV2Plugin::suil_port_index(void *controller, const char *symbol)
 
 	auto idx = lilv_port_get_index(lv2->plugin, port);
 
-	/* TODO: untested, keep the printf until you see in in the logs */
-	printf("GUI IS GETTING ID FOR PORT %s, got %u\n", symbol, idx);
-
 	return idx;
 }
 
 /* UI HANDLING */
 void LV2Plugin::prepare_ui()
 {
+	if (this->plugin_instance == nullptr)
+		return;
+
 	if (this->ui_instance != nullptr)
 		return;
 

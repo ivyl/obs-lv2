@@ -12,6 +12,7 @@ sources = [
   'obs-lv2.cpp',
   'ui.cpp',
   'urid.cpp',
+  'state.cpp',
   'ports.cpp',
   'core.cpp',
 ]

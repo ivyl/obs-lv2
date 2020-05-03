@@ -38,8 +38,10 @@ static void obs_filter_update(void *data, obs_data_t *settings);
 static void *obs_filter_create(obs_data_t *settings, obs_source_t *filter)
 {
 	LV2Plugin *lv2 = new LV2Plugin();
+	const char *state = obs_data_get_string(settings, "lv2_plugin_state");
 
 	obs_filter_update(lv2, settings);
+	lv2->set_state(state);
 
 	return lv2;
 }
@@ -143,6 +145,12 @@ obs_filter_audio(void *data, struct obs_audio_data *audio)
 	return audio;
 }
 
+static void obs_filter_save(void *data, obs_data_t *settings)
+{
+	LV2Plugin *lv2 = (LV2Plugin*) data;
+	obs_data_set_string(settings, "lv2_plugin_state", lv2->get_state());
+}
+
 struct obs_source_info obs_lv2_filter = {
 	.id             = "lv2_filter",
 	.type           = OBS_SOURCE_TYPE_FILTER,
@@ -153,6 +161,7 @@ struct obs_source_info obs_lv2_filter = {
 	.get_properties = obs_filter_properties,
 	.update         = obs_filter_update,
 	.filter_audio   = obs_filter_audio,
+	.save           = obs_filter_save,
 };
 
 bool obs_module_load(void)
