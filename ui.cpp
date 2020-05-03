@@ -144,6 +144,8 @@ void LV2Plugin::prepare_ui()
 					 sizeof(float),
 					 PROTOCOL_FLOAT,
 					 &port->value);
+
+		port->ui_value = port->value;
 	}
 }
 
@@ -178,5 +180,29 @@ void LV2Plugin::cleanup_ui()
 	if (this->ui_instance != nullptr) {
 		suil_instance_free(this->ui_instance);
 		this->ui_instance = nullptr;
+	}
+}
+
+void LV2Plugin::notify_ui_output_control_ports()
+{
+	if (this->ui_instance == nullptr || !this->is_ui_visible())
+		return;
+
+	for (size_t i = 0; i < this->ports_count; ++i) {
+		auto port = this->ports + i;
+
+		if (port->type != PORT_CONTROL || port->is_input)
+			continue;
+
+		if (port->ui_value == port->value)
+			continue;
+
+		suil_instance_port_event(this->ui_instance,
+					 port->index,
+					 sizeof(float),
+					 PROTOCOL_FLOAT,
+					 &port->value);
+
+		port->ui_value = port->value;
 	}
 }

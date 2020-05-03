@@ -65,9 +65,9 @@ struct LV2Port
 	bool is_input;
 	bool is_optional;
 	float value;
+	float ui_value;
 	const LilvPort* lilv_port;
 	enum LV2PortType type;
-
 };
 
 class LV2Plugin
@@ -97,6 +97,8 @@ public:
 
 	const char *get_state(void);
 	void set_state(const char *str);
+
+	void notify_ui_output_control_ports(void);
 
 protected:
 	bool ready = false;

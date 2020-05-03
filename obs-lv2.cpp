@@ -142,6 +142,8 @@ obs_filter_audio(void *data, struct obs_audio_data *audio)
 		}
 	}
 
+	lv2->notify_ui_output_control_ports();
+
 	return audio;
 }
 

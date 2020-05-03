@@ -44,6 +44,7 @@ void LV2Plugin::prepare_ports(void)
 		this->ports[i].value = isnan(default_values[i]) ? 0.0f : default_values[i];
 		this->ports[i].lilv_port = port;
 		this->ports[i].index = i;
+		this->ports[i].ui_value = NAN;
 
 		if (lilv_port_is_a(this->plugin, port, input_port)) {
 			this->ports[i].is_input = true;
