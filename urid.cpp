@@ -27,7 +27,6 @@ LV2_URID LV2Plugin::urid_map(LV2_URID_Map_Handle handle, const char *uri)
 	if (lv2->urid_map_data.find(key) == lv2->urid_map_data.end()) {
 		urid = lv2->current_urid++;
 		lv2->urid_map_data[key] = urid;
-		printf("Added %u: %s\n", urid, uri);
 	} else {
 		urid = lv2->urid_map_data[key];
 	}
@@ -40,17 +39,11 @@ const char *LV2Plugin::urid_unmap(void *handle, LV2_URID urid)
 	LV2Plugin *lv2 = (LV2Plugin*)handle;
 	const char *value = nullptr;
 
-	printf("Trying to unmap %u\n", urid);
 
 	for (auto const& p : lv2->urid_map_data) {
 		if (p.second == urid) {
 			value = p.first.c_str();
-			printf("got %s\n", value);
 		}
-	}
-
-	if (value == nullptr) {
-		printf("not mapped yet\n");
 	}
 
 	return value;
