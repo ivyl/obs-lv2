@@ -21,6 +21,13 @@
 #define PROP_PLUGIN_LIST "lv2_plugin_list"
 #define PROP_TOGGLE_BUTTON "lv2_toggle_gui_button"
 
+class PluginData
+{
+	public:
+	GuiUpdateTimer *timer;
+	LV2Plugin *lv2;
+};
+
 OBS_DECLARE_MODULE()
 MODULE_EXPORT const char *obs_module_description(void)
 {
@@ -37,24 +44,31 @@ static void obs_filter_update(void *data, obs_data_t *settings);
 
 static void *obs_filter_create(obs_data_t *settings, obs_source_t *filter)
 {
-	LV2Plugin *lv2 = new LV2Plugin();
+	PluginData *data = new PluginData();
+
+	data->lv2 = new LV2Plugin();
 	const char *state = obs_data_get_string(settings, "lv2_plugin_state");
 
-	obs_filter_update(lv2, settings);
-	lv2->set_state(state);
+	obs_filter_update(data, settings);
+	data->lv2->set_state(state);
 
-	return lv2;
+	data->timer = new GuiUpdateTimer(data->lv2);
+	data->timer->start();
+
+	return data;
 }
 
 static void obs_filter_destroy(void *data)
 {
-	LV2Plugin *lv2 = (LV2Plugin*) data;
-	delete lv2;
+	PluginData *d = (PluginData*) data;
+
+	delete d->timer;
+	delete d->lv2;
 }
 
 static bool obs_toggle_gui(obs_properties_t *props, obs_property_t *property, void *data)
 {
-	LV2Plugin *lv2 = (LV2Plugin*) data;
+	LV2Plugin *lv2 = ((PluginData*) data)->lv2;
 	lv2->prepare_ui();
 
 	if (lv2->is_ui_visible())
@@ -67,7 +81,7 @@ static bool obs_toggle_gui(obs_properties_t *props, obs_property_t *property, vo
 
 static obs_properties_t *obs_filter_properties(void *data)
 {
-	LV2Plugin *lv2 = (LV2Plugin*) data;
+	LV2Plugin *lv2 = ((PluginData*) data)->lv2;
 
 	obs_properties_t *props = obs_properties_create();
 
@@ -94,7 +108,7 @@ static obs_properties_t *obs_filter_properties(void *data)
 static void obs_filter_update(void *data, obs_data_t *settings)
 {
 	auto obs_audio = obs_get_audio();
-	LV2Plugin *lv2 = (LV2Plugin*) data;
+	LV2Plugin *lv2 = ((PluginData*) data)->lv2;
 
 	const char *uri = obs_data_get_string(settings, PROP_PLUGIN_LIST);
 
@@ -116,7 +130,7 @@ static void obs_filter_update(void *data, obs_data_t *settings)
 static struct obs_audio_data *
 obs_filter_audio(void *data, struct obs_audio_data *audio)
 {
-	LV2Plugin *lv2 = (LV2Plugin*) data;
+	LV2Plugin *lv2 = ((PluginData*) data)->lv2;
 	float **audio_data = (float **)audio->data;
 
 	size_t channels = lv2->get_channels();
@@ -142,14 +156,12 @@ obs_filter_audio(void *data, struct obs_audio_data *audio)
 		}
 	}
 
-	lv2->notify_ui_output_control_ports();
-
 	return audio;
 }
 
 static void obs_filter_save(void *data, obs_data_t *settings)
 {
-	LV2Plugin *lv2 = (LV2Plugin*) data;
+	LV2Plugin *lv2 = ((PluginData*) data)->lv2;
 	obs_data_set_string(settings, "lv2_plugin_state", lv2->get_state());
 }
 

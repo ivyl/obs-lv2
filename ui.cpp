@@ -185,7 +185,7 @@ void LV2Plugin::cleanup_ui()
 
 void LV2Plugin::notify_ui_output_control_ports()
 {
-	if (this->ui_instance == nullptr || !this->is_ui_visible())
+	if (this->ui_instance == nullptr || this->ui_window == nullptr || !this->is_ui_visible())
 		return;
 
 	for (size_t i = 0; i < this->ports_count; ++i) {

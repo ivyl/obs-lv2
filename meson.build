@@ -11,12 +11,12 @@ deps =  [
 sources = [
   'obs-lv2.cpp',
   'ui.cpp',
+  'ui_timer.cpp',
   'urid.cpp',
   'state.cpp',
   'ports.cpp',
   'core.cpp',
 ]
-
 
 shared_library(meson.project_name(),
 	       sources,

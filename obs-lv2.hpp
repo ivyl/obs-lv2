@@ -28,11 +28,28 @@
 #include <stdio.h>
 #include <string.h>
 #include <QWidget>
+#include <QTimer>
 #include <QVBoxLayout>
 #include <QCloseEvent>
 #include <string>
 #include <math.h>
 #include <vector>
+
+class LV2Plugin;
+
+class GuiUpdateTimer : public QObject
+{
+public:
+	GuiUpdateTimer(LV2Plugin *lv2);
+	~GuiUpdateTimer();
+
+	void start(void);
+
+protected:
+	void tick(void);
+	QTimer *timer = nullptr;
+	LV2Plugin *lv2 = nullptr;
+};
 
 class WidgetWindow : public QWidget
 {
@@ -48,6 +65,7 @@ protected:
 	QWidget *currentWidget = nullptr;
 
 	void closeEvent(QCloseEvent *event) override;
+	void updatePorts(void);
 };
 
 #define PROTOCOL_FLOAT 0
