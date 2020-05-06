@@ -82,10 +82,7 @@ void LV2Plugin::populate_supported_plugins(void)
 		bool skip;
 
 		/* require hard RTC */
-		/* XXX: seems to be only in the optional features */
-		auto opt_features = lilv_plugin_get_optional_features(plugin);
-		skip = !lilv_nodes_contains(opt_features, hard_rtc);
-		lilv_nodes_free(opt_features);
+		skip = !lilv_plugin_has_feature(plugin, hard_rtc);
 
 		if (skip) {
 			printf("%s filtered out due to not supporting hard RTC\n",
