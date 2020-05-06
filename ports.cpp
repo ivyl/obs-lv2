@@ -17,7 +17,6 @@
 
 #include "obs-lv2.hpp"
 
-/* TODO: cleanup_ports, we are now leaking this when switching plugins */
 void LV2Plugin::prepare_ports(void)
 {
 	LilvNode* input_port   = lilv_new_uri(world, LV2_CORE__InputPort);
@@ -98,8 +97,7 @@ void LV2Plugin::prepare_ports(void)
 	}
 
 	/* TODO: make sure that we have enough port for our samples */
-	/* TODO: wire GUI so it shows levels */
-	/* TODO: control port persistance */
+	/* TODO: wire atom ports to GUI so we have more than just levels */
 
 	free(default_values);
 
@@ -109,6 +107,18 @@ void LV2Plugin::prepare_ports(void)
 	lilv_node_free(audio_port);
 	lilv_node_free(output_port);
 	lilv_node_free(input_port);
+}
+
+
+void LV2Plugin::cleanup_ports(void)
+{
+	free(this->input_buffer);
+	free(this->output_buffer);
+	this->input_buffer = nullptr;
+	this->output_buffer = nullptr;
+
+	free(this->ports);
+	this->ports = nullptr;
 }
 
 void LV2Plugin::process_frame(float* buf)

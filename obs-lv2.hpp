@@ -104,6 +104,7 @@ public:
 
 	void update_plugin_instance(void);
 	void prepare_ports(void);
+	void cleanup_ports(void);
 
 	void prepare_ui(void);
 	void show_ui(void);

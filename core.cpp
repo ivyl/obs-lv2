@@ -51,6 +51,7 @@ LV2Plugin::~LV2Plugin()
 	suil_host_free(ui_host);
 	lilv_world_free(world);
 	free(plugin_uri);
+	cleanup_ports();
 }
 
 bool LV2Plugin::is_feature_supported(const LilvNode* node)
@@ -162,6 +163,8 @@ void LV2Plugin::update_plugin_instance(void)
 	this->plugin_instance = nullptr;
 	this->plugin = nullptr;
 	this->ui = nullptr;
+
+	cleanup_ports();
 
 	LilvNode *uri = nullptr;
 
