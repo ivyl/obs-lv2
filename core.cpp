@@ -30,11 +30,14 @@ LV2Plugin::LV2Plugin(void)
 	/* data will be set to plugin instance each time we update */
 	feature_instance_access = { LV2_INSTANCE_ACCESS_URI, nullptr };
 
+	feature_data_access = { LV2_DATA_ACCESS_URI, &feature_data_access_data };
+
 	features[0] = &feature_uri_map;
 	/* XXX: don't expose it, crashes some plugins */
 	/* features[1] = &feature_uri_unmap; */
 	features[1] = &feature_instance_access;
-	features[2] = nullptr; /* NULL terminated */
+	features[2] = &feature_data_access;
+	features[3] = nullptr; /* NULL terminated */
 
 	world = lilv_world_new();
 	lilv_world_load_all(world);
@@ -161,6 +164,7 @@ void LV2Plugin::update_plugin_instance(void)
 	cleanup_ui();
 
 	this->feature_instance_access.data = nullptr;
+	this->feature_data_access_data.data_access = nullptr;
 
 	lilv_instance_free(this->plugin_instance);
 	this->plugin_instance = nullptr;
@@ -200,6 +204,9 @@ void LV2Plugin::update_plugin_instance(void)
 								this->features);
 
 		this->feature_instance_access.data = lilv_instance_get_handle(this->plugin_instance);
+
+		/* XXX: digging in lilv's internals, there may be a better way to do this */
+		this->feature_data_access_data.data_access = this->plugin_instance->lv2_descriptor->extension_data;
 
 		this->prepare_ports();
 	}

@@ -24,6 +24,7 @@
 #include <lv2/urid/urid.h>
 #include <lv2/state/state.h>
 #include <lv2/instance-access/instance-access.h>
+#include <lv2/data-access/data-access.h>
 #include <iostream>
 #include <functional>
 #include <stdio.h>
@@ -173,10 +174,13 @@ protected:
 
 	LV2_Feature feature_instance_access;
 
+	LV2_Extension_Data_Feature feature_data_access_data;
+	LV2_Feature feature_data_access;
+
 	static LV2_URID urid_map(void *handle, const char *uri);
 	static const char *urid_unmap(void *handle, LV2_URID urid);
 
-	const LV2_Feature* features[3];
+	const LV2_Feature* features[4];
 
 	/* STATE PERSISTENCE */
 	static const void *get_port_value(const char *port_symbol,
