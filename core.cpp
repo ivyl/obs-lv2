@@ -27,10 +27,14 @@ LV2Plugin::LV2Plugin(void)
 	feature_uri_unmap_data = { this, LV2Plugin::urid_unmap };
 	feature_uri_unmap = { LV2_URID_MAP_URI, &feature_uri_unmap_data };
 
+	/* data will be set to plugin instance each time we update */
+	feature_instance_access = { LV2_INSTANCE_ACCESS_URI, nullptr };
+
 	features[0] = &feature_uri_map;
 	/* XXX: don't expose it, crashes some plugins */
 	/* features[1] = &feature_uri_unmap; */
-	features[1] = nullptr; /* NULL terminated */
+	features[1] = &feature_instance_access;
+	features[2] = nullptr; /* NULL terminated */
 
 	world = lilv_world_new();
 	lilv_world_load_all(world);
@@ -156,6 +160,8 @@ void LV2Plugin::update_plugin_instance(void)
 
 	cleanup_ui();
 
+	this->feature_instance_access.data = nullptr;
+
 	lilv_instance_free(this->plugin_instance);
 	this->plugin_instance = nullptr;
 	this->plugin = nullptr;
@@ -192,6 +198,8 @@ void LV2Plugin::update_plugin_instance(void)
 		this->plugin_instance = lilv_plugin_instantiate(this->plugin,
 								this->sample_rate,
 								this->features);
+
+		this->feature_instance_access.data = lilv_instance_get_handle(this->plugin_instance);
 
 		this->prepare_ports();
 	}

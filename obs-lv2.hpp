@@ -23,6 +23,7 @@
 #include <lv2/atom/atom.h>
 #include <lv2/urid/urid.h>
 #include <lv2/state/state.h>
+#include <lv2/instance-access/instance-access.h>
 #include <iostream>
 #include <functional>
 #include <stdio.h>
@@ -169,6 +170,8 @@ protected:
 
 	LV2_URID_Unmap feature_uri_unmap_data;
 	LV2_Feature feature_uri_unmap;
+
+	LV2_Feature feature_instance_access;
 
 	static LV2_URID urid_map(void *handle, const char *uri);
 	static const char *urid_unmap(void *handle, LV2_URID urid);
