@@ -162,7 +162,9 @@ obs_filter_audio(void *data, struct obs_audio_data *audio)
 static void obs_filter_save(void *data, obs_data_t *settings)
 {
 	LV2Plugin *lv2 = ((PluginData*) data)->lv2;
-	obs_data_set_string(settings, "lv2_plugin_state", lv2->get_state());
+	auto state = lv2->get_state();
+	obs_data_set_string(settings, "lv2_plugin_state", state);
+	free(state);
 }
 
 struct obs_source_info obs_lv2_filter = {

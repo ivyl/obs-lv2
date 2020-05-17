@@ -116,7 +116,7 @@ public:
 
 	void process_frame(float*);
 
-	const char *get_state(void);
+	char *get_state(void);
 	void set_state(const char *str);
 
 	void notify_ui_output_control_ports(void);

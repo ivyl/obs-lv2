@@ -51,7 +51,7 @@ void LV2Plugin::set_port_value(const char *port_symbol,
 	lv2->ports[idx].value = *((float*) value);
 }
 
-const char *LV2Plugin::get_state(void)
+char *LV2Plugin::get_state(void)
 {
 	if (this->plugin_instance == nullptr)
 		return NULL;
@@ -74,8 +74,6 @@ const char *LV2Plugin::get_state(void)
 
 	lilv_state_free(state);
 
-	/* TODO: check lilv code to make sure this is not use after free */
-	/* do we have to free this? */
 	return str;
 }
 
