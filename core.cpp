@@ -283,10 +283,8 @@ uint32_t LV2Plugin::port_index(const char *symbol) {
 	const LilvPort* port = lilv_plugin_get_port_by_symbol(this->plugin, lilv_sym);
 	lilv_node_free(lilv_sym);
 
-	if (port == nullptr) {
-		printf("unknown port %s\n", symbol);
-		abort();
-	}
+	if (port == nullptr)
+		return LV2UI_INVALID_PORT_INDEX;
 
 	auto idx = lilv_port_get_index(this->plugin, port);
 

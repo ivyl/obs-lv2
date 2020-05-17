@@ -43,6 +43,11 @@ void LV2Plugin::set_port_value(const char *port_symbol,
 
 	auto idx = lv2->port_index(port_symbol);
 
+	if (idx == LV2UI_INVALID_PORT_INDEX) {
+		printf("trying to set value for unknown port %s\n", port_symbol);
+		return;
+	}
+
 	if (size != sizeof(float) || type != PROTOCOL_FLOAT) {
 		printf("trying to restore state for something weird\n");
 		abort();
