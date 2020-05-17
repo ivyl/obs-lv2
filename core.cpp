@@ -48,8 +48,6 @@ LV2Plugin::LV2Plugin(void)
 				NULL, NULL);
 
 	populate_supported_plugins();
-
-	/* XXX: what is ui_hosts's touch callback for exactely? do we even need it? */
 }
 
 LV2Plugin::~LV2Plugin()
