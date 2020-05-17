@@ -97,6 +97,7 @@ void LV2Plugin::populate_supported_plugins(void)
 			continue;
 		}
 
+		/* filter out plugins which require feature we don't support */
 		auto req_features = lilv_plugin_get_required_features(plugin);
 		LILV_FOREACH(nodes, j, req_features) {
 			const LilvNode* feature = lilv_nodes_get(req_features, j);
@@ -111,7 +112,24 @@ void LV2Plugin::populate_supported_plugins(void)
 		}
 		lilv_nodes_free(req_features);
 
-		/* TODO: filter out non filtering (e.g. MIDI) plugins or the ones without GUI */
+		if (skip)
+			continue;
+
+		/* filter out plugins without supported UI */
+		skip = true;
+		auto uis = lilv_plugin_get_uis(plugin);
+		auto qt5_uri = lilv_new_uri(this->world, LV2_UI__Qt5UI);
+		LILV_FOREACH(uis, i, uis) {
+			const LilvNode *ui_type;
+			auto ui = lilv_uis_get(uis, i);
+
+			if (lilv_ui_is_supported(ui, suil_ui_supported,
+						 qt5_uri,
+						 &ui_type)) {
+				skip = false;
+			}
+		}
+		lilv_node_free(qt5_uri);
 
 		if (skip)
 			continue;
