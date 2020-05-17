@@ -84,6 +84,15 @@ void LV2Plugin::populate_supported_plugins(void)
 {
 	auto hard_rtc = lilv_new_uri(this->world, LV2_CORE__hardRTCapable);
 
+	std::vector<LilvNode*> supported_classes;
+	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__FilterPlugin));
+	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__DelayPlugin));
+	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__DistortionPlugin));
+	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__DynamicsPlugin));
+	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__EQPlugin));
+	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__ModulatorPlugin));
+	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__SpatialPlugin));
+
 	LILV_FOREACH(plugins, i, this->plugins) {
 		auto plugin = lilv_plugins_get(this->plugins, i);
 		bool skip;
@@ -96,6 +105,21 @@ void LV2Plugin::populate_supported_plugins(void)
 			       lilv_node_as_string(lilv_plugin_get_name(plugin)));
 			continue;
 		}
+
+		/* filter for plugins classes that make sesne for us */
+		skip = true;
+		auto cls = lilv_plugin_get_class(plugin);
+		auto cls_uri = lilv_plugin_class_get_uri(cls);
+		auto parent_cls_uri = lilv_plugin_class_get_parent_uri(cls);
+		for (auto const& supported_cls : supported_classes) {
+			if (lilv_node_equals(cls_uri, supported_cls) ||
+			    (parent_cls_uri != NULL && lilv_node_equals(parent_cls_uri, supported_cls))) {
+				skip = false;
+			}
+		}
+
+		if (skip)
+			continue;
 
 		/* filter out plugins which require feature we don't support */
 		auto req_features = lilv_plugin_get_required_features(plugin);
@@ -138,6 +162,9 @@ void LV2Plugin::populate_supported_plugins(void)
 			lilv_node_as_string(lilv_plugin_get_name(plugin)),
 			lilv_node_as_string(lilv_plugin_get_uri(plugin))));
 	}
+
+	for (auto& supported_cls : supported_classes)
+		lilv_node_free(supported_cls);
 
 	lilv_node_free(hard_rtc);
 }
