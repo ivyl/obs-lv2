@@ -121,6 +121,8 @@ public:
 
 	void notify_ui_output_control_ports(void);
 
+	uint32_t port_index(const char *symbol);
+
 protected:
 	bool ready = false;
 	LilvWorld *world;

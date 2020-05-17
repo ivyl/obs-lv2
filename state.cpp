@@ -41,7 +41,7 @@ void LV2Plugin::set_port_value(const char *port_symbol,
 {
 	LV2Plugin *lv2 = (LV2Plugin*)user_data;
 
-	auto idx = LV2Plugin::suil_port_index(lv2, port_symbol);
+	auto idx = lv2->port_index(port_symbol);
 
 	if (size != sizeof(float) || type != PROTOCOL_FLOAT) {
 		printf("trying to restore state for something weird\n");

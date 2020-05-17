@@ -277,3 +277,18 @@ size_t LV2Plugin::get_channels(void)
 {
 	return this->channels;
 }
+
+uint32_t LV2Plugin::port_index(const char *symbol) {
+	LilvNode* lilv_sym   = lilv_new_string(this->world, symbol);
+	const LilvPort* port = lilv_plugin_get_port_by_symbol(this->plugin, lilv_sym);
+	lilv_node_free(lilv_sym);
+
+	if (port == nullptr) {
+		printf("unknown port %s\n", symbol);
+		abort();
+	}
+
+	auto idx = lilv_port_get_index(this->plugin, port);
+
+	return idx;
+}

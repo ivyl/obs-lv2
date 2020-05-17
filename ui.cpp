@@ -74,24 +74,11 @@ void LV2Plugin::suil_write_from_ui(void *controller,
 	lv2->ports[port_index].value = *((float*)buffer);
 }
 
-/* TODO: make a normal method out of this and keep this as a wraper for
- * state.cpp's sake */
 uint32_t LV2Plugin::suil_port_index(void *controller, const char *symbol)
 {
 	LV2Plugin *lv2 = (LV2Plugin*)controller;
 
-	LilvNode* lilv_sym   = lilv_new_string(lv2->world, symbol);
-	const LilvPort* port = lilv_plugin_get_port_by_symbol(lv2->plugin, lilv_sym);
-	lilv_node_free(lilv_sym);
-
-	if (port == nullptr) {
-		printf("unknown port %s\n", symbol);
-		abort();
-	}
-
-	auto idx = lilv_port_get_index(lv2->plugin, port);
-
-	return idx;
+	return lv2->port_index(symbol);
 }
 
 /* UI HANDLING */
