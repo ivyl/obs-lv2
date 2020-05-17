@@ -49,8 +49,9 @@ void LV2Plugin::set_port_value(const char *port_symbol,
 	}
 
 	if (size != sizeof(float) || type != PROTOCOL_FLOAT) {
-		printf("trying to restore state for something weird\n");
-		abort();
+		printf("failed to restore state for %s of type %u - it's not a float\n",
+		       port_symbol, type);
+		return;
 	}
 
 	lv2->ports[idx].value = *((float*) value);
