@@ -104,8 +104,7 @@ void LV2Plugin::prepare_ui()
 					      this->features);
 
 	if (this->ui_instance == nullptr) {
-		/* TODO: filtering should help with this */
-		printf("filed to find ui!\n");
+		printf("failed to find ui!\n");
 		abort();
 	}
 

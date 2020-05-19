@@ -97,7 +97,6 @@ void LV2Plugin::prepare_ports(void)
 	}
 
 	/* TODO: make sure that we have enough port for our samples */
-	/* TODO: wire atom ports to GUI so we have more than just levels */
 
 	free(default_values);
 

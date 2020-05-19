@@ -55,7 +55,6 @@ protected:
 
 class WidgetWindow : public QWidget
 {
-	/* TODO: Q_OBJECT + QT's moc tool ? */
 public:
 	explicit WidgetWindow(QWidget *parent = nullptr);
 	void clearWidget(void);
