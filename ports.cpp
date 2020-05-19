@@ -17,6 +17,12 @@
 
 #include "obs-lv2.hpp"
 
+/* XXX: OBS gives us ~400 frames at a time, and internal defines seem to point
+ * 1k frames max, this should be safe for now - if stop working we need to
+ * either bump it here or change the process_frames to process input in chunks
+ */
+#define MAX_AUDIO_FRAMES 4096
+
 void LV2Plugin::prepare_ports(void)
 {
 	LilvNode* input_port   = lilv_new_uri(world, LV2_CORE__InputPort);
@@ -33,8 +39,8 @@ void LV2Plugin::prepare_ports(void)
 	float* default_values = (float*)calloc(this->ports_count, sizeof(float));
 	lilv_plugin_get_port_ranges_float(this->plugin, NULL, NULL, default_values);
 
-	input_buffer_size = 0;
-	output_buffer_size = 0;
+	input_channels_count = 0;
+	output_channels_count = 0;
 
 	for (size_t i = 0; i < this->ports_count; ++i) {
 		auto port = lilv_plugin_get_port_by_index(this->plugin, i);
@@ -62,9 +68,9 @@ void LV2Plugin::prepare_ports(void)
 			this->ports[i].type = PORT_AUDIO;
 
 			if (this->ports[i].is_input)
-				this->input_buffer_size++;
+				this->input_channels_count++;
 			else
-				this->output_buffer_size++;
+				this->output_channels_count++;
 		} else if (lilv_port_is_a(this->plugin, port, atom_port)) {
 			/* TODO: some plugins seem to have atom port what are those? */
 			/* everything seems to be working if we ignore them */
@@ -81,18 +87,21 @@ void LV2Plugin::prepare_ports(void)
 		}
 	}
 
-	this->input_buffer = (float*) calloc(input_buffer_size, sizeof(*this->input_buffer));
-	this->output_buffer = (float*) calloc(output_buffer_size, sizeof(*this->output_buffer));
+	this->input_buffer = (float**) calloc(input_channels_count, sizeof(*input_buffer));
+	this->output_buffer = (float**) calloc(output_channels_count, sizeof(*output_buffer));
 
 	size_t in_off = 0;
 	size_t out_off = 0;
 
 	for (size_t i = 0; i < this->ports_count; ++i) {
 		if (this->ports[i].type == PORT_AUDIO) {
-			if (this->ports[i].is_input)
-				lilv_instance_connect_port(this->plugin_instance, i, input_buffer + in_off++);
-			else
-				lilv_instance_connect_port(this->plugin_instance, i, output_buffer + out_off++);
+			if (this->ports[i].is_input) {
+				input_buffer[in_off] = (float*) calloc(MAX_AUDIO_FRAMES, sizeof(**input_buffer));
+				lilv_instance_connect_port(this->plugin_instance, i, input_buffer[in_off++]);
+			} else {
+				output_buffer[out_off] = (float*) calloc(MAX_AUDIO_FRAMES, sizeof(**output_buffer));
+				lilv_instance_connect_port(this->plugin_instance, i, output_buffer[out_off++]);
+			}
 		}
 	}
 
@@ -111,8 +120,15 @@ void LV2Plugin::prepare_ports(void)
 
 void LV2Plugin::cleanup_ports(void)
 {
+	for (size_t i = 0; i < this->input_channels_count; i++)
+		free(this->input_buffer[i]);
+
+	for (size_t i = 0; i < this->output_channels_count; i++)
+		free(this->output_buffer[i]);
+
 	free(this->input_buffer);
 	free(this->output_buffer);
+
 	this->input_buffer = nullptr;
 	this->output_buffer = nullptr;
 
@@ -120,17 +136,24 @@ void LV2Plugin::cleanup_ports(void)
 	this->ports = nullptr;
 }
 
-void LV2Plugin::process_frame(float* buf)
+void LV2Plugin::process_frames(float** buf, int frames)
 {
 	/* XXX: may need proper locking */
 	if (!this->ready || this->plugin_instance == nullptr)
 		return;
 
-	for (size_t ch = 0; ch < this->channels; ++ch)
-		input_buffer[ch] = buf[ch];
+	if (frames > MAX_AUDIO_FRAMES) {
+		printf("too many frames at once, FIXME!\n");
+		abort();
+	}
 
-	lilv_instance_run(this->plugin_instance, 1);
+	size_t chs = std::min(this->channels, this->input_channels_count);
+	for (size_t ch = 0; ch < chs; ++ch)
+		memcpy(input_buffer[ch], buf[ch], frames * sizeof(**buf));
 
-	for (size_t ch = 0; ch < this->channels; ++ch)
-		buf[ch] = output_buffer[ch];
+	lilv_instance_run(this->plugin_instance, frames);
+
+	chs = std::min(this->channels, this->output_channels_count);
+	for (size_t ch = 0; ch < chs; ++ch)
+		memcpy(buf[ch], output_buffer[ch], frames * sizeof(**buf));
 }

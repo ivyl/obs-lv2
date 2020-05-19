@@ -36,6 +36,7 @@
 #include <string>
 #include <math.h>
 #include <vector>
+#include <algorithm>
 
 class LV2Plugin;
 
@@ -113,7 +114,7 @@ public:
 	bool is_ui_visible(void);
 	void cleanup_ui(void);
 
-	void process_frame(float*);
+	void process_frames(float**, int frames);
 
 	char *get_state(void);
 	void set_state(const char *str);
@@ -140,10 +141,10 @@ protected:
 	/* PORT MAPPING */
 	struct LV2Port *ports = nullptr;
 	size_t ports_count = 0;
-	float *input_buffer = nullptr;
-	float *output_buffer = nullptr;
-	size_t input_buffer_size = 0;
-	size_t output_buffer_size = 0;
+	float **input_buffer = nullptr;
+	float **output_buffer = nullptr;
+	size_t input_channels_count = 0;
+	size_t output_channels_count = 0;
 
 	/* UI */
 	const LilvUI *ui = nullptr;

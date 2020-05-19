@@ -133,28 +133,7 @@ obs_filter_audio(void *data, struct obs_audio_data *audio)
 	LV2Plugin *lv2 = ((PluginData*) data)->lv2;
 	float **audio_data = (float **)audio->data;
 
-	size_t channels = lv2->get_channels();
-	float buf[channels];
-
-	/* TODO: process frames in bulk, currently we are invoking plugin run
-	 * for each frame which is not optimal but seem to work. OBS on my
-	 * system feeds us ~400 frames each round, and the plugins are capable
-	 * of processing more than 1 frame at a time.*/
-	for (size_t frame = 0; frame < audio->frames; ++frame) {
-		for (size_t ch = 0; ch < channels; ++ch) {
-			if (audio->data[ch])
-				buf[ch] = audio_data[ch][frame];
-			else
-				buf[ch] = 0.0f;
-		}
-
-		lv2->process_frame(buf);
-
-		for (size_t ch = 0; ch < channels; ++ch) {
-			if (audio->data[ch])
-				audio_data[ch][frame] = buf[ch];
-		}
-	}
+	lv2->process_frames(audio_data, audio->frames);
 
 	return audio;
 }
