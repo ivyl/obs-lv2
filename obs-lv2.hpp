@@ -38,6 +38,8 @@
 #include <vector>
 #include <algorithm>
 
+#define WARN printf
+
 class LV2Plugin;
 
 class GuiUpdateTimer : public QObject
@@ -105,6 +107,7 @@ public:
 	size_t get_channels(void);
 
 	void update_plugin_instance(void);
+	void cleanup_plugin_instance(void);
 	void prepare_ports(void);
 	void cleanup_ports(void);
 

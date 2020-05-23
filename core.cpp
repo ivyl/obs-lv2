@@ -53,6 +53,7 @@ LV2Plugin::LV2Plugin(void)
 LV2Plugin::~LV2Plugin()
 {
 	cleanup_ui();
+	cleanup_plugin_instance();
 	suil_host_free(ui_host);
 	lilv_world_free(world);
 	free(plugin_uri);
@@ -196,6 +197,19 @@ void LV2Plugin::set_uri(const char* uri)
 	}
 }
 
+void LV2Plugin::cleanup_plugin_instance(void) {
+	if (this->plugin_instance == nullptr)
+		return;
+
+	lilv_instance_deactivate(this->plugin_instance);
+	lilv_instance_free(this->plugin_instance);
+
+	this->feature_instance_access.data = nullptr;
+	this->feature_data_access_data.data_access = nullptr;
+
+	this->plugin_instance = nullptr;
+}
+
 void LV2Plugin::update_plugin_instance(void)
 {
 	if (!this->instance_needs_update)
@@ -205,12 +219,8 @@ void LV2Plugin::update_plugin_instance(void)
 	this->instance_needs_update = false;
 
 	cleanup_ui();
+	cleanup_plugin_instance();
 
-	this->feature_instance_access.data = nullptr;
-	this->feature_data_access_data.data_access = nullptr;
-
-	lilv_instance_free(this->plugin_instance);
-	this->plugin_instance = nullptr;
 	this->plugin = nullptr;
 	this->ui = nullptr;
 
@@ -224,35 +234,45 @@ void LV2Plugin::update_plugin_instance(void)
 		lilv_node_free(uri);
 	}
 
-	if (this->plugin != nullptr) {
-		auto qt5_uri = lilv_new_uri(this->world, LV2_UI__Qt5UI);
-
-		auto uis = lilv_plugin_get_uis(this->plugin);
-		LILV_FOREACH(uis, i, uis) {
-			const LilvNode *ui_type;
-			auto ui = lilv_uis_get(uis, i);
-
-			if (lilv_ui_is_supported(ui, suil_ui_supported,
-						 qt5_uri,
-						 &ui_type)) {
-				this->ui = ui;
-				this->ui_type = ui_type;
-				break;
-			}
-		}
-		lilv_node_free(qt5_uri);
-
-		this->plugin_instance = lilv_plugin_instantiate(this->plugin,
-								this->sample_rate,
-								this->features);
-
-		this->feature_instance_access.data = lilv_instance_get_handle(this->plugin_instance);
-
-		/* XXX: digging in lilv's internals, there may be a better way to do this */
-		this->feature_data_access_data.data_access = this->plugin_instance->lv2_descriptor->extension_data;
-
-		this->prepare_ports();
+	if (this->plugin == nullptr) {
+		WARN("failed to get plugin by uri\n");
+		return;
 	}
+
+	auto qt5_uri = lilv_new_uri(this->world, LV2_UI__Qt5UI);
+
+	auto uis = lilv_plugin_get_uis(this->plugin);
+	LILV_FOREACH(uis, i, uis) {
+		const LilvNode *ui_type;
+		auto ui = lilv_uis_get(uis, i);
+
+		if (lilv_ui_is_supported(ui, suil_ui_supported,
+					 qt5_uri,
+					 &ui_type)) {
+			this->ui = ui;
+			this->ui_type = ui_type;
+			break;
+		}
+	}
+	lilv_node_free(qt5_uri);
+
+	this->plugin_instance = lilv_plugin_instantiate(this->plugin,
+							this->sample_rate,
+							this->features);
+
+	if (this->plugin_instance == nullptr) {
+		WARN("failed to instantiate plugin\n");
+		return;
+	}
+
+	this->feature_instance_access.data = lilv_instance_get_handle(this->plugin_instance);
+
+	/* XXX: digging in lilv's internals, there may be a better way to do this */
+	this->feature_data_access_data.data_access = this->plugin_instance->lv2_descriptor->extension_data;
+
+	this->prepare_ports();
+
+	lilv_instance_activate(this->plugin_instance);
 
 	this->ready = true;
 }
