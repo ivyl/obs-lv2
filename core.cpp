@@ -118,8 +118,11 @@ void LV2Plugin::populate_supported_plugins(void)
 			}
 		}
 
-		if (skip)
+		if (skip) {
+			printf("%s filtered out - class not supported\n",
+			       lilv_node_as_string(lilv_plugin_get_name(plugin)));
 			continue;
+		}
 
 		/* filter out plugins which require feature we don't support */
 		auto req_features = lilv_plugin_get_required_features(plugin);
@@ -155,8 +158,11 @@ void LV2Plugin::populate_supported_plugins(void)
 		}
 		lilv_node_free(qt5_uri);
 
-		if (skip)
+		if (skip) {
+			printf("%s filtered out - has no usable GUI\n",
+			       lilv_node_as_string(lilv_plugin_get_name(plugin)));
 			continue;
+		}
 
 		this->supported_pluggins.push_back(pair<string,string>(
 			lilv_node_as_string(lilv_plugin_get_name(plugin)),
