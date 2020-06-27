@@ -22,4 +22,5 @@ shared_library(meson.project_name(),
 	       sources,
 	       dependencies : deps,
 	       name_prefix : '',
-	       install_dir : 'obs-plugins')
+	       install: true,
+	       install_dir : get_option('libdir') / 'obs-plugins')

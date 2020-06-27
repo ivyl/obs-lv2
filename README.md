@@ -12,7 +12,7 @@ probably will crash your OBS. Backup your profile.
 ## Building && Installing
 
 ```
-$ meson build
+$ meson --prefix=/usr build/
 $ ninja -C build
 ```
 
@@ -22,7 +22,7 @@ System-wide installation:
 $ sudo ninja -C build install
 ```
 
-Single user:
+Single user (works with OBS 25 on Arch):
 
 ```
 mkdir -p ~/.config/obs-studio/plugins/obs-lv2/bin/64bit/
