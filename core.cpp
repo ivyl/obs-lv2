@@ -92,6 +92,9 @@ void LV2Plugin::populate_supported_plugins(void)
 	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__ModulatorPlugin));
 	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__SpatialPlugin));
 	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__SpectralPlugin));
+	/* UtilityPlugin subclasses: */
+	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__FunctionPlugin));
+	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__ConverterPlugin));
 
 	LILV_FOREACH(plugins, i, this->plugins) {
 		auto plugin = lilv_plugins_get(this->plugins, i);
