@@ -147,16 +147,27 @@ static void obs_filter_save(void *data, obs_data_t *settings)
 }
 
 struct obs_source_info obs_lv2_filter = {
-	.id             = "lv2_filter",
-	.type           = OBS_SOURCE_TYPE_FILTER,
-	.output_flags   = OBS_SOURCE_AUDIO,
-	.get_name       = obs_filter_name,
-	.create         = obs_filter_create,
-	.destroy        = obs_filter_destroy,
-	.get_properties = obs_filter_properties,
-	.update         = obs_filter_update,
-	.filter_audio   = obs_filter_audio,
-	.save           = obs_filter_save,
+	.id                  = "lv2_filter",
+	.type                = OBS_SOURCE_TYPE_FILTER,
+	.output_flags        = OBS_SOURCE_AUDIO,
+	.get_name            = obs_filter_name,
+	.create              = obs_filter_create,
+	.destroy             = obs_filter_destroy,
+	.get_width           = nullptr,
+	.get_height          = nullptr,
+	.get_defaults        = nullptr,
+	.get_properties      = obs_filter_properties,
+	.update              = obs_filter_update,
+	.activate            = nullptr,
+	.deactivate          = nullptr,
+	.show                = nullptr,
+	.hide                = nullptr,
+	.video_tick          = nullptr,
+	.video_render        = nullptr,
+	.filter_video        = nullptr,
+	.filter_audio        = obs_filter_audio,
+	.enum_active_sources = nullptr,
+	.save                = obs_filter_save,
 };
 
 bool obs_module_load(void)
