@@ -119,8 +119,10 @@ void LV2Plugin::populate_supported_plugins(void)
 		}
 
 		if (skip) {
-			printf("%s filtered out - class not supported\n",
-			       lilv_node_as_string(lilv_plugin_get_name(plugin)));
+			printf("%s filtered out - %s (parent %s) class not supported\n",
+				   lilv_node_as_string(lilv_plugin_get_name(plugin)),
+				   lilv_node_as_string(cls_uri),
+				   lilv_node_as_string(parent_cls_uri));
 			continue;
 		}
 
