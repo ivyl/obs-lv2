@@ -1,0 +1,2 @@
+option('local_install', type : 'boolean', value : true,
+       description: 'install the plugin locally in ~/.config/obs-studio/plugins/')
