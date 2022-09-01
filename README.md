@@ -25,6 +25,13 @@ $ sudo ninja -C build install
 Single user (works with OBS 25 on Arch):
 
 ```
+$ meson -Dlocal_install=true build/
+$ meson -C build install
+```
+
+or manually:
+
+```
 mkdir -p ~/.config/obs-studio/plugins/obs-lv2/bin/64bit/
 cp -v build/obs-lv2.so ~/.config/obs-studio/plugins/obs-lv2/bin/64bit/
 ```
