@@ -95,7 +95,7 @@ struct LV2Port
 class LV2Plugin
 {
 public:
-	LV2Plugin(void);
+	LV2Plugin(size_t channels);
 	~LV2Plugin();
 
 	void for_each_supported_plugin(std::function<void(const char *, const char *)> f);

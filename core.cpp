@@ -19,7 +19,7 @@
 
 using namespace std;
 
-LV2Plugin::LV2Plugin(void)
+LV2Plugin::LV2Plugin(size_t channels)
 {
 	feature_uri_map_data = { this, LV2Plugin::urid_map };
 	feature_uri_map = { LV2_URID_MAP_URI, &feature_uri_map_data };
@@ -39,6 +39,7 @@ LV2Plugin::LV2Plugin(void)
 	features[2] = &feature_data_access;
 	features[3] = nullptr; /* NULL terminated */
 
+	this->channels = channels;
 	world = lilv_world_new();
 	lilv_world_load_all(world);
 	plugins = lilv_world_get_all_plugins(world);
@@ -81,42 +82,13 @@ bool LV2Plugin::is_feature_supported(const LilvNode* node)
 
 void LV2Plugin::populate_supported_plugins(void)
 {
-	std::vector<LilvNode*> supported_classes;
-	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__FilterPlugin));
-	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__DelayPlugin));
-	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__DistortionPlugin));
-	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__DynamicsPlugin));
-	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__EQPlugin));
-	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__ModulatorPlugin));
-	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__SpatialPlugin));
-	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__SpectralPlugin));
-	/* UtilityPlugin subclasses: */
-	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__FunctionPlugin));
-	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__ConverterPlugin));
+	LilvNode* input_port  = lilv_new_uri(world, LV2_CORE__InputPort);
+	LilvNode* output_port = lilv_new_uri(world, LV2_CORE__OutputPort);
+	LilvNode* audio_port  = lilv_new_uri(world, LV2_CORE__AudioPort);
 
 	LILV_FOREACH(plugins, i, this->plugins) {
 		auto plugin = lilv_plugins_get(this->plugins, i);
-		bool skip;
-
-		/* filter for plugins classes that make sesne for us */
-		skip = true;
-		auto cls = lilv_plugin_get_class(plugin);
-		auto cls_uri = lilv_plugin_class_get_uri(cls);
-		auto parent_cls_uri = lilv_plugin_class_get_parent_uri(cls);
-		for (auto const& supported_cls : supported_classes) {
-			if (lilv_node_equals(cls_uri, supported_cls) ||
-			    (parent_cls_uri != NULL && lilv_node_equals(parent_cls_uri, supported_cls))) {
-				skip = false;
-			}
-		}
-
-		if (skip) {
-			printf("%s filtered out - %s (parent %s) class not supported\n",
-				   lilv_node_as_string(lilv_plugin_get_name(plugin)),
-				   lilv_node_as_string(cls_uri),
-				   lilv_node_as_string(parent_cls_uri));
-			continue;
-		}
+		bool skip = false;
 
 		/* filter out plugins which require feature we don't support */
 		auto req_features = lilv_plugin_get_required_features(plugin);
@@ -158,13 +130,26 @@ void LV2Plugin::populate_supported_plugins(void)
 			continue;
 		}
 
+		auto in_aps = lilv_plugin_get_num_ports_of_class(plugin, audio_port, input_port, NULL);
+		auto out_aps = lilv_plugin_get_num_ports_of_class(plugin, audio_port, output_port, NULL);
+
+		if (in_aps < this->get_channels() || out_aps < this->get_channels()) {
+			printf("%s filtered out - supports only %u input and %u output channels, while OBS audio uses %lu\n",
+			       lilv_node_as_string(lilv_plugin_get_name(plugin)),
+			       in_aps, out_aps, this->get_channels());
+
+			continue;
+		}
+
 		this->supported_pluggins.push_back(pair<string,string>(
 			lilv_node_as_string(lilv_plugin_get_name(plugin)),
 			lilv_node_as_string(lilv_plugin_get_uri(plugin))));
+
 	}
 
-	for (auto& supported_cls : supported_classes)
-		lilv_node_free(supported_cls);
+	lilv_node_free(audio_port);
+	lilv_node_free(output_port);
+	lilv_node_free(input_port);
 }
 
 void LV2Plugin::for_each_supported_plugin(function<void(const char *, const char *)> f)

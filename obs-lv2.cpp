@@ -44,9 +44,12 @@ static void obs_filter_update(void *data, obs_data_t *settings);
 
 static void *obs_filter_create(obs_data_t *settings, obs_source_t *filter)
 {
+	auto obs_audio = obs_get_audio();
+	size_t channels = audio_output_get_channels(obs_audio);
+
 	PluginData *data = new PluginData();
 
-	data->lv2 = new LV2Plugin();
+	data->lv2 = new LV2Plugin(channels);
 	const char *state = obs_data_get_string(settings, "lv2_plugin_state");
 
 	obs_filter_update(data, settings);
