@@ -81,8 +81,6 @@ bool LV2Plugin::is_feature_supported(const LilvNode* node)
 
 void LV2Plugin::populate_supported_plugins(void)
 {
-	auto hard_rtc = lilv_new_uri(this->world, LV2_CORE__hardRTCapable);
-
 	std::vector<LilvNode*> supported_classes;
 	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__FilterPlugin));
 	supported_classes.push_back(lilv_new_uri(this->world, LV2_CORE__DelayPlugin));
@@ -99,15 +97,6 @@ void LV2Plugin::populate_supported_plugins(void)
 	LILV_FOREACH(plugins, i, this->plugins) {
 		auto plugin = lilv_plugins_get(this->plugins, i);
 		bool skip;
-
-		/* require hard RTC */
-		skip = !lilv_plugin_has_feature(plugin, hard_rtc);
-
-		if (skip) {
-			printf("%s filtered out due to not supporting hard RTC\n",
-			       lilv_node_as_string(lilv_plugin_get_name(plugin)));
-			continue;
-		}
 
 		/* filter for plugins classes that make sesne for us */
 		skip = true;
@@ -176,8 +165,6 @@ void LV2Plugin::populate_supported_plugins(void)
 
 	for (auto& supported_cls : supported_classes)
 		lilv_node_free(supported_cls);
-
-	lilv_node_free(hard_rtc);
 }
 
 void LV2Plugin::for_each_supported_plugin(function<void(const char *, const char *)> f)
