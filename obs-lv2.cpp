@@ -62,7 +62,7 @@ static void obs_filter_destroy(void *data)
 {
 	PluginData *d = (PluginData*) data;
 
-	delete d->timer;
+	d->timer->deleteLater();
 	delete d->lv2;
 }
 
