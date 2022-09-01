@@ -38,6 +38,25 @@ cp -v build/obs-lv2.so ~/.config/obs-studio/plugins/obs-lv2/bin/64bit/
 
 Paths may depend on your installation.
 
+# Wayland
+
+You may see the following in your logs:
+
+```
+QWindow::fromWinId(): platform plugin does not support foreign windows.
+```
+
+Nesting windows from different toolkits is not possible on Wayland the way we
+currently do it.
+
+You can force OBS to run via XWayland to work around this limitation:
+
+```
+$ unset XDG_SESSION_TYPE WAYLAND_DISPLAY
+$ obs
+```
+
+
 ## Links
 
  * https://lv2plug.in/
