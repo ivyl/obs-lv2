@@ -8,6 +8,7 @@ deps =  [
   dependency('lilv-0'),
   dependency('suil-0'),
   dependency('Qt5Widgets'),
+  dependency('threads'),
 ]
 
 sources = [
@@ -17,6 +18,7 @@ sources = [
   'urid.cpp',
   'state.cpp',
   'ports.cpp',
+  'worker.cpp',
   'core.cpp',
 ]
 

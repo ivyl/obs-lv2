@@ -50,6 +50,9 @@ LV2Plugin::LV2Plugin(size_t channels)
 	feature_options = { LV2_OPTIONS__options, &feature_options_options };
 	feature_bounded_block_lenght = { LV2_BUF_SIZE__boundedBlockLength, nullptr };
 
+	feature_worker_schedule_data = { &this->worker, LV2Worker::schedule_work };
+	feature_worker_schedule = { LV2_WORKER__schedule, &feature_worker_schedule_data };
+
 	auto nf = 0UL;
 	features[nf++] = &feature_uri_map;
 	features[nf++] = &feature_uri_unmap;
@@ -57,6 +60,7 @@ LV2Plugin::LV2Plugin(size_t channels)
 	features[nf++] = &feature_data_access;
 	features[nf++] = &feature_options;
 	features[nf++] = &feature_bounded_block_lenght;
+	features[nf++] = &feature_worker_schedule;
 	features[nf++] = nullptr; /* NULL terminated */
 	assert(nf <= (sizeof(features)/sizeof(features[0])));
 
@@ -206,6 +210,7 @@ void LV2Plugin::cleanup_plugin_instance(void) {
 	if (this->plugin_instance == nullptr)
 		return;
 
+	worker.stop();
 	lilv_instance_deactivate(this->plugin_instance);
 	lilv_instance_free(this->plugin_instance);
 
@@ -269,6 +274,13 @@ void LV2Plugin::update_plugin_instance(void)
 		WARN("failed to instantiate plugin\n");
 		return;
 	}
+
+	auto worker_interface = lilv_instance_get_extension_data(this->plugin_instance,
+								 LV2_WORKER__interface);
+
+	if (worker_interface != nullptr)
+		this->worker.start(lilv_instance_get_handle(this->plugin_instance),
+				   (LV2_Worker_Interface*) worker_interface);
 
 	this->feature_instance_access.data = lilv_instance_get_handle(this->plugin_instance);
 

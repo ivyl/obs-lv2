@@ -27,6 +27,7 @@
 #include <lv2/data-access/data-access.h>
 #include <lv2/options/options.h>
 #include <lv2/buf-size/buf-size.h>
+#include <lv2/worker/worker.h>
 #include <iostream>
 #include <functional>
 #include <stdio.h>
@@ -199,10 +200,14 @@ protected:
 	LV2_Options_Option feature_options_options[3];
 	LV2_Feature feature_bounded_block_lenght;
 
+	LV2Worker worker;
+	LV2_Worker_Schedule feature_worker_schedule_data;
+	LV2_Feature feature_worker_schedule;
+
 	static LV2_URID urid_map(void *handle, const char *uri);
 	static const char *urid_unmap(void *handle, LV2_URID urid);
 
-	const LV2_Feature* features[7];
+	const LV2_Feature* features[8];
 
 	/* STATE PERSISTENCE */
 	static const void *get_port_value(const char *port_symbol,

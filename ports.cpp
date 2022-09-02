@@ -146,6 +146,7 @@ void LV2Plugin::process_frames(float** buf, int frames)
 		memcpy(input_buffer[ch], buf[ch], frames * sizeof(**buf));
 
 	lilv_instance_run(this->plugin_instance, frames);
+	this->worker.run();
 
 	chs = std::min(this->channels, this->output_channels_count);
 	for (size_t ch = 0; ch < chs; ++ch)
