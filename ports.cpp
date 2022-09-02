@@ -17,12 +17,6 @@
 
 #include "obs-lv2.hpp"
 
-/* XXX: OBS gives us ~400 frames at a time, and internal defines seem to point
- * 1k frames max, this should be safe for now - if stop working we need to
- * either bump it here or change the process_frames to process input in chunks
- */
-#define MAX_AUDIO_FRAMES 4096
-
 void LV2Plugin::prepare_ports(void)
 {
 	LilvNode* input_port   = lilv_new_uri(world, LV2_CORE__InputPort);

@@ -25,6 +25,8 @@
 #include <lv2/state/state.h>
 #include <lv2/instance-access/instance-access.h>
 #include <lv2/data-access/data-access.h>
+#include <lv2/options/options.h>
+#include <lv2/buf-size/buf-size.h>
 #include <iostream>
 #include <functional>
 #include <stdio.h>
@@ -37,6 +39,14 @@
 #include <math.h>
 #include <vector>
 #include <algorithm>
+
+#include "worker.hpp"
+
+/* XXX: OBS gives us ~400 frames at a time, and internal defines seem to point
+ * 1k frames max, this should be safe for now - if stop working we need to
+ * either bump it here or change the process_frames to process input in chunks
+ */
+#define MAX_AUDIO_FRAMES 4096
 
 #define WARN printf
 
@@ -182,10 +192,17 @@ protected:
 	LV2_Extension_Data_Feature feature_data_access_data;
 	LV2_Feature feature_data_access;
 
+	int32_t feature_option_max_block_length;
+	int32_t feature_option_min_block_length;
+
+	LV2_Feature feature_options;
+	LV2_Options_Option feature_options_options[3];
+	LV2_Feature feature_bounded_block_lenght;
+
 	static LV2_URID urid_map(void *handle, const char *uri);
 	static const char *urid_unmap(void *handle, LV2_URID urid);
 
-	const LV2_Feature* features[4];
+	const LV2_Feature* features[6];
 
 	/* STATE PERSISTENCE */
 	static const void *get_port_value(const char *port_symbol,

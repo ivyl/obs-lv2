@@ -21,6 +21,7 @@ using namespace std;
 
 LV2Plugin::LV2Plugin(size_t channels)
 {
+	auto atom_int = urid_map(this, LV2_ATOM__Int);
 	feature_uri_map_data = { this, LV2Plugin::urid_map };
 	feature_uri_map = { LV2_URID_MAP_URI, &feature_uri_map_data };
 
@@ -32,12 +33,31 @@ LV2Plugin::LV2Plugin(size_t channels)
 
 	feature_data_access = { LV2_DATA_ACCESS_URI, &feature_data_access_data };
 
+	feature_option_max_block_length = MAX_AUDIO_FRAMES;
+	feature_options_options[0] = { LV2_OPTIONS_INSTANCE, 0,
+				       urid_map(this, LV2_BUF_SIZE__maxBlockLength),
+				       sizeof(feature_option_max_block_length), atom_int,
+				       &feature_option_max_block_length };
+
+	feature_option_min_block_length = 0;
+	feature_options_options[1] = { LV2_OPTIONS_INSTANCE, 0,
+				       urid_map(this, LV2_BUF_SIZE__minBlockLength),
+				       sizeof(feature_option_min_block_length), atom_int,
+				       &feature_option_min_block_length};
+
+	feature_options_options[2] = { /* terminate */ };
+
+	feature_options = { LV2_OPTIONS__options, &feature_options_options };
+	feature_bounded_block_lenght = { LV2_BUF_SIZE__boundedBlockLength, nullptr };
+
 	features[0] = &feature_uri_map;
 	/* XXX: don't expose it, crashes some plugins */
 	/* features[1] = &feature_uri_unmap; */
 	features[1] = &feature_instance_access;
 	features[2] = &feature_data_access;
-	features[3] = nullptr; /* NULL terminated */
+	features[3] = &feature_options;
+	features[4] = &feature_bounded_block_lenght;
+	features[5] = nullptr; /* NULL terminated */
 
 	this->channels = channels;
 	world = lilv_world_new();
