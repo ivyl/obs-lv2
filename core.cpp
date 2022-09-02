@@ -50,14 +50,16 @@ LV2Plugin::LV2Plugin(size_t channels)
 	feature_options = { LV2_OPTIONS__options, &feature_options_options };
 	feature_bounded_block_lenght = { LV2_BUF_SIZE__boundedBlockLength, nullptr };
 
-	features[0] = &feature_uri_map;
+	auto nf = 0UL;
+	features[nf++] = &feature_uri_map;
 	/* XXX: don't expose it, crashes some plugins */
 	/* features[1] = &feature_uri_unmap; */
-	features[1] = &feature_instance_access;
-	features[2] = &feature_data_access;
-	features[3] = &feature_options;
-	features[4] = &feature_bounded_block_lenght;
-	features[5] = nullptr; /* NULL terminated */
+	features[nf++] = &feature_instance_access;
+	features[nf++] = &feature_data_access;
+	features[nf++] = &feature_options;
+	features[nf++] = &feature_bounded_block_lenght;
+	features[nf++] = nullptr; /* NULL terminated */
+	assert(nf <= (sizeof(features)/sizeof(features[0])));
 
 	this->channels = channels;
 	world = lilv_world_new();
