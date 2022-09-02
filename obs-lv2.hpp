@@ -202,7 +202,7 @@ protected:
 	static LV2_URID urid_map(void *handle, const char *uri);
 	static const char *urid_unmap(void *handle, LV2_URID urid);
 
-	const LV2_Feature* features[6];
+	const LV2_Feature* features[7];
 
 	/* STATE PERSISTENCE */
 	static const void *get_port_value(const char *port_symbol,

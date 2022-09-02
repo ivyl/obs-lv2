@@ -23,10 +23,10 @@ LV2Plugin::LV2Plugin(size_t channels)
 {
 	auto atom_int = urid_map(this, LV2_ATOM__Int);
 	feature_uri_map_data = { this, LV2Plugin::urid_map };
-	feature_uri_map = { LV2_URID_MAP_URI, &feature_uri_map_data };
+	feature_uri_map = { LV2_URID__map, &feature_uri_map_data };
 
 	feature_uri_unmap_data = { this, LV2Plugin::urid_unmap };
-	feature_uri_unmap = { LV2_URID_MAP_URI, &feature_uri_unmap_data };
+	feature_uri_unmap = { LV2_URID__unmap, &feature_uri_unmap_data };
 
 	/* data will be set to plugin instance each time we update */
 	feature_instance_access = { LV2_INSTANCE_ACCESS_URI, nullptr };
@@ -52,8 +52,7 @@ LV2Plugin::LV2Plugin(size_t channels)
 
 	auto nf = 0UL;
 	features[nf++] = &feature_uri_map;
-	/* XXX: don't expose it, crashes some plugins */
-	/* features[1] = &feature_uri_unmap; */
+	features[nf++] = &feature_uri_unmap;
 	features[nf++] = &feature_instance_access;
 	features[nf++] = &feature_data_access;
 	features[nf++] = &feature_options;
